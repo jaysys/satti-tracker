@@ -28,3 +28,7 @@ export function fetchLeoBackdrop(mode = "snapshot") {
   const query = new URLSearchParams({ mode });
   return request(`/api/satellites/leo-backdrop?${query.toString()}`);
 }
+
+export function fetchSatelliteCatalogSummary() {
+  return request("/api/satellites/catalog-summary");
+}

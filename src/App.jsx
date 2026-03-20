@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Button, Callout, Card, H1, Icon } from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
 import {
+  CatalogSummaryPanel,
   NetworkCasePanel,
   OrbitCasePanel,
   RasterCasePanel,
@@ -18,6 +19,15 @@ const tabMeta = [
     description: "한국 위성의 현재 위치와 궤도선을 3D 지구본에서 추적한다.",
     count: 12,
     icon: IconNames.SATELLITE,
+  },
+  {
+    id: "satellite-catalog",
+    label: "Satellite Table",
+    eyebrow: "CSV CASE",
+    title: "대한민국 위성 payload 카탈로그",
+    description: "CSV 원본 55행을 읽기 쉬운 표와 요약 카드로 정리한다.",
+    count: 55,
+    icon: IconNames.TH,
   },
   {
     id: "satellite-raster",
@@ -80,6 +90,10 @@ export default function App() {
       return <RasterCasePanel />;
     }
 
+    if (activeTab === "satellite-catalog") {
+      return <CatalogSummaryPanel />;
+    }
+
     return <NetworkCasePanel />;
   }
 
@@ -126,7 +140,7 @@ export default function App() {
           </div>
           <div className="sidebar-card__row">
             <span>Visible tabs</span>
-            <strong>3</strong>
+            <strong>4</strong>
           </div>
           <div className="sidebar-card__row">
             <span>Stack</span>
@@ -146,8 +160,8 @@ export default function App() {
         </header>
 
         <Callout className="case-callout" intent="primary" title="Satellite visualization cases">
-          `Orbit Track`, `Raster Layer`, `Signal Mesh` 3개 케이스만 남기고 나머지 운영 대시보드 기능과
-          화면은 제거했다.
+          `Orbit Track`, `Satellite Table`, `Raster Layer`, `Signal Mesh` 4개 케이스만 남기고 나머지 운영
+          대시보드 기능과 화면은 제거했다.
         </Callout>
 
         <section className="stage-content">{renderContent()}</section>

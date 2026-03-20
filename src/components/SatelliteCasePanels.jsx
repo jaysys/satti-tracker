@@ -1,6 +1,6 @@
-import { Button, Card, InputGroup, Intent, ProgressBar, Tag, Tooltip } from "@blueprintjs/core";
+import { Button, Card, HTMLTable, InputGroup, Intent, ProgressBar, Tag, Tooltip } from "@blueprintjs/core";
 import { useEffect, useMemo, useState } from "react";
-import { fetchLeoBackdrop, fetchSatelliteFleet } from "../api";
+import { fetchLeoBackdrop, fetchSatelliteCatalogSummary, fetchSatelliteFleet } from "../api";
 import CesiumOrbitDemo from "./CesiumOrbitDemo";
 
 const ORBIT_SOURCE_MODE_STORAGE_KEY = "pulse-desk:orbit-source-mode";
@@ -136,6 +136,68 @@ function getGroupLabel(orbitClass) {
 
 function supportsEarthGlobeTrack(item) {
   return item.orbitClass !== "cislunar" && item.norad !== "53365";
+}
+
+function formatCatalogAltitudeRange(apogeeKm, perigeeKm) {
+  if (Number.isFinite(apogeeKm) && Number.isFinite(perigeeKm)) {
+    return `${Math.round(perigeeKm)}-${Math.round(apogeeKm)} km`;
+  }
+
+  if (Number.isFinite(apogeeKm)) {
+    return `${Math.round(apogeeKm)} km`;
+  }
+
+  if (Number.isFinite(perigeeKm)) {
+    return `${Math.round(perigeeKm)} km`;
+  }
+
+  return "unknown";
+}
+
+function formatCatalogInclination(inclination) {
+  return Number.isFinite(inclination) ? `${inclination.toFixed(2)}°` : "unknown";
+}
+
+function formatCatalogPeriod(periodMinutes) {
+  return Number.isFinite(periodMinutes) ? `${periodMinutes.toFixed(2)} min` : "unknown";
+}
+
+function getCatalogTrackIntent(trackKey) {
+  if (trackKey === "rendered") {
+    return Intent.SUCCESS;
+  }
+
+  if (trackKey === "catalog-only") {
+    return Intent.WARNING;
+  }
+
+  if (trackKey === "non-earth") {
+    return Intent.PRIMARY;
+  }
+
+  return Intent.DANGER;
+}
+
+function compareCatalogValues(left, right, direction = "asc") {
+  const order = direction === "asc" ? 1 : -1;
+
+  if (left == null && right == null) {
+    return 0;
+  }
+
+  if (left == null) {
+    return 1;
+  }
+
+  if (right == null) {
+    return -1;
+  }
+
+  if (typeof left === "number" && typeof right === "number") {
+    return (left - right) * order;
+  }
+
+  return String(left).localeCompare(String(right), "en", { numeric: true, sensitivity: "base" }) * order;
 }
 
 export function OrbitCasePanel() {
@@ -689,6 +751,330 @@ export function OrbitCasePanel() {
         </Card>
       </section>
 
+    </>
+  );
+}
+
+export function CatalogSummaryPanel() {
+  const [payload, setPayload] = useState({
+    updatedAt: null,
+    summary: null,
+    rows: [],
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [orbitFilter, setOrbitFilter] = useState("all");
+  const [trackFilter, setTrackFilter] = useState("all");
+  const [sortConfig, setSortConfig] = useState({
+    key: "launchDate",
+    direction: "desc",
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSummary() {
+      setLoading(true);
+
+      try {
+        const nextPayload = await fetchSatelliteCatalogSummary();
+        if (!cancelled) {
+          setPayload(nextPayload);
+          setError("");
+        }
+      } catch (nextError) {
+        if (!cancelled) {
+          setError(nextError.message);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadSummary();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const filteredRows = useMemo(() => {
+    const searchText = searchQuery.trim().toLowerCase();
+
+    return payload.rows.filter((row) => {
+      const matchesOrbit = orbitFilter === "all" || row.orbitClass === orbitFilter;
+      const matchesTrack = trackFilter === "all" || row.trackKey === trackFilter;
+      const matchesSearch =
+        !searchText ||
+        [
+          row.englishName,
+          row.domesticName,
+          row.norad,
+          row.objectId,
+          row.orbitLabel,
+          row.missionLabel,
+          row.trackLabel,
+          row.site,
+        ]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(searchText));
+
+      return matchesOrbit && matchesTrack && matchesSearch;
+    });
+  }, [orbitFilter, payload.rows, searchQuery, trackFilter]);
+
+  const sortedRows = useMemo(() => {
+    const valueResolvers = {
+      englishName: (row) => row.englishName,
+      norad: (row) => Number(row.norad),
+      orbitLabel: (row) => row.orbitLabel,
+      missionLabel: (row) => row.missionLabel,
+      launchDate: (row) => row.launchDate,
+      altitude: (row) => Math.max(row.apogeeKm ?? -Infinity, row.perigeeKm ?? -Infinity),
+      inclination: (row) => row.inclination,
+      periodMinutes: (row) => row.periodMinutes,
+      trackLabel: (row) => row.trackLabel,
+    };
+
+    const resolveValue = valueResolvers[sortConfig.key] ?? valueResolvers.launchDate;
+
+    return [...filteredRows].sort((left, right) => {
+      const primary = compareCatalogValues(resolveValue(left), resolveValue(right), sortConfig.direction);
+      if (primary !== 0) {
+        return primary;
+      }
+
+      return compareCatalogValues(left.englishName, right.englishName, "asc");
+    });
+  }, [filteredRows, sortConfig]);
+
+  const filteredCounts = useMemo(
+    () => ({
+      rendered: filteredRows.filter((row) => row.trackKey === "rendered").length,
+      catalogOnly: filteredRows.filter((row) => row.trackKey === "catalog-only").length,
+      nonEarth: filteredRows.filter((row) => row.trackKey === "non-earth").length,
+      decayed: filteredRows.filter((row) => row.trackKey === "decayed").length,
+    }),
+    [filteredRows],
+  );
+
+  const summary = payload.summary;
+
+  function toggleSort(nextKey) {
+    setSortConfig((current) => ({
+      key: nextKey,
+      direction: current.key === nextKey && current.direction === "asc" ? "desc" : "asc",
+    }));
+  }
+
+  function renderSortHeader(label, key) {
+    const isActive = sortConfig.key === key;
+    const arrow = !isActive ? "" : sortConfig.direction === "asc" ? "▲" : "▼";
+
+    return (
+      <button
+        type="button"
+        className={`catalog-sort-button ${isActive ? "catalog-sort-button--active" : ""}`}
+        onClick={() => toggleSort(key)}
+      >
+        <span>{label}</span>
+        <span className="catalog-sort-button__arrow">{arrow}</span>
+      </button>
+    );
+  }
+
+  return (
+    <>
+      <section className="panel-grid panel-grid--single">
+        <Card className="panel">
+          <PanelTitle
+            eyebrow="CSV SUMMARY"
+            title="대한민국 위성 payload 카탈로그 요약"
+            tag={summary ? `${sortedRows.length}/${summary.total} rows` : "loading"}
+          />
+          <div className="catalog-summary-grid">
+            <div className="orbit-summary-card">
+              <span className="orbit-summary-card__label">CSV rows</span>
+              <strong>{summary?.total ?? 0}</strong>
+              <span>{summary ? `${summary.current} current payloads` : "Loading summary"}</span>
+            </div>
+            <div className="orbit-summary-card">
+              <span className="orbit-summary-card__label">Earth render</span>
+              <strong>{summary?.rendered ?? 0}</strong>
+              <span>{summary ? `${summary.catalogOnly} catalog only` : "Ephemeris check"}</span>
+            </div>
+            <div className="orbit-summary-card">
+              <span className="orbit-summary-card__label">Orbit mix</span>
+              <strong>{summary ? summary.orbitCounts.leo + summary.orbitCounts.geo : 0}</strong>
+              <span>
+                {summary
+                  ? `LEO ${summary.orbitCounts.leo} · GEO ${summary.orbitCounts.geo} · Other ${
+                      summary.orbitCounts.meo + summary.orbitCounts.cislunar
+                    }`
+                  : "Orbit counts"}
+              </span>
+            </div>
+            <div className="orbit-summary-card">
+              <span className="orbit-summary-card__label">Launch span</span>
+              <strong>{summary?.launchSpan.last ?? "unknown"}</strong>
+              <span>{summary ? `${summary.launchSpan.first}부터 현재 CSV까지` : "Launch history"}</span>
+            </div>
+          </div>
+
+          <div className="catalog-toolbar">
+            <div className="orbit-filter-group catalog-toolbar__search">
+              <span className="orbit-filter-group__label">검색</span>
+              <InputGroup
+                value={searchQuery}
+                leftIcon="search"
+                placeholder="위성명, NORAD, OBJECT_ID, 임무, 발사장"
+                onChange={(event) => setSearchQuery(event.target.value)}
+              />
+            </div>
+
+            <div className="orbit-filter-group">
+              <span className="orbit-filter-group__label">궤도</span>
+              <div className="segment-filter">
+                <Button active={orbitFilter === "all"} minimal={orbitFilter !== "all"} onClick={() => setOrbitFilter("all")}>
+                  전체
+                </Button>
+                <Button active={orbitFilter === "leo"} minimal={orbitFilter !== "leo"} onClick={() => setOrbitFilter("leo")}>
+                  LEO
+                </Button>
+                <Button active={orbitFilter === "geo"} minimal={orbitFilter !== "geo"} onClick={() => setOrbitFilter("geo")}>
+                  GEO
+                </Button>
+                <Button active={orbitFilter === "meo"} minimal={orbitFilter !== "meo"} onClick={() => setOrbitFilter("meo")}>
+                  MEO
+                </Button>
+                <Button
+                  active={orbitFilter === "cislunar"}
+                  minimal={orbitFilter !== "cislunar"}
+                  onClick={() => setOrbitFilter("cislunar")}
+                >
+                  Lunar
+                </Button>
+              </div>
+            </div>
+
+            <div className="orbit-filter-group">
+              <span className="orbit-filter-group__label">표출 상태</span>
+              <div className="segment-filter">
+                <Button active={trackFilter === "all"} minimal={trackFilter !== "all"} onClick={() => setTrackFilter("all")}>
+                  전체
+                </Button>
+                <Button
+                  active={trackFilter === "rendered"}
+                  minimal={trackFilter !== "rendered"}
+                  onClick={() => setTrackFilter("rendered")}
+                >
+                  지구본 렌더
+                </Button>
+                <Button
+                  active={trackFilter === "catalog-only"}
+                  minimal={trackFilter !== "catalog-only"}
+                  onClick={() => setTrackFilter("catalog-only")}
+                >
+                  Catalog only
+                </Button>
+                <Button
+                  active={trackFilter === "non-earth"}
+                  minimal={trackFilter !== "non-earth"}
+                  onClick={() => setTrackFilter("non-earth")}
+                >
+                  Non-Earth
+                </Button>
+                <Button
+                  active={trackFilter === "decayed"}
+                  minimal={trackFilter !== "decayed"}
+                  onClick={() => setTrackFilter("decayed")}
+                >
+                  Decayed
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="catalog-summary-note">
+            <strong>{payload.updatedAt ? payload.updatedAt.slice(0, 19).replace("T", " ") : "Summary pending"}</strong>
+            <span>
+              필터 결과 {sortedRows.length}기 · 렌더 {filteredCounts.rendered} · catalog only {filteredCounts.catalogOnly} ·
+              non-Earth {filteredCounts.nonEarth} · decayed {filteredCounts.decayed}
+            </span>
+          </div>
+          {error ? <div className="orbit-source-warning">{error}</div> : null}
+        </Card>
+      </section>
+
+      <section className="panel-grid panel-grid--single">
+        <Card className="panel panel--table">
+          <PanelTitle eyebrow="CSV TABLE" title="space-track-skor-current-payloads.csv" tag={`${sortedRows.length} visible`} />
+          <div className="catalog-table-wrap">
+            {loading ? (
+              <div className="orbit-empty-state">CSV summary loading...</div>
+            ) : (
+              <HTMLTable className="work-table catalog-table" striped interactive>
+                <thead>
+                  <tr>
+                    <th>{renderSortHeader("위성명", "englishName")}</th>
+                    <th>{renderSortHeader("NORAD", "norad")}</th>
+                    <th>{renderSortHeader("궤도", "orbitLabel")}</th>
+                    <th>{renderSortHeader("임무", "missionLabel")}</th>
+                    <th>{renderSortHeader("발사일", "launchDate")}</th>
+                    <th>{renderSortHeader("고도", "altitude")}</th>
+                    <th>{renderSortHeader("경사각", "inclination")}</th>
+                    <th>{renderSortHeader("주기", "periodMinutes")}</th>
+                    <th>{renderSortHeader("표출 상태", "trackLabel")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedRows.map((row) => (
+                    <tr key={row.norad}>
+                      <td>
+                        <div className="title-cell catalog-table__title">
+                          <strong>{row.englishName}</strong>
+                          <span>{row.objectId ?? "OBJECT_ID unavailable"}</span>
+                          <span>{row.site ?? "Launch site unavailable"}</span>
+                        </div>
+                      </td>
+                      <td className="catalog-table__mono">{row.norad}</td>
+                      <td>
+                        <div className="title-cell">
+                          <strong>{row.orbitLabel}</strong>
+                          <span>{row.operationalStatus}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="title-cell">
+                          <strong>{row.missionLabel}</strong>
+                          <span>{row.objectType ?? "PAYLOAD"}</span>
+                        </div>
+                      </td>
+                      <td className="catalog-table__mono">{row.launchDate ?? "unknown"}</td>
+                      <td className="catalog-table__mono">
+                        {formatCatalogAltitudeRange(row.apogeeKm, row.perigeeKm)}
+                      </td>
+                      <td className="catalog-table__mono">{formatCatalogInclination(row.inclination)}</td>
+                      <td className="catalog-table__mono">{formatCatalogPeriod(row.periodMinutes)}</td>
+                      <td>
+                        <div className="catalog-status-cell">
+                          <Tag minimal intent={getCatalogTrackIntent(row.trackKey)}>
+                            {row.trackLabel}
+                          </Tag>
+                          <span>{row.trackDetail}</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </HTMLTable>
+            )}
+          </div>
+        </Card>
+      </section>
     </>
   );
 }

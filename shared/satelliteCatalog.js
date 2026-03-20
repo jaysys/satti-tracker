@@ -241,7 +241,8 @@ function buildCatalogEntry(row) {
 
 const parsedCatalogRows = loadCatalogRows();
 
-export const satelliteCatalogAll = parsedCatalogRows.map(buildCatalogEntry);
+export const satelliteCatalogCsvRows = parsedCatalogRows.map((row) => ({ ...row }));
+export const satelliteCatalogAll = satelliteCatalogCsvRows.map(buildCatalogEntry);
 export const satelliteCatalog = satelliteCatalogAll.filter((entry) => !decayedNorads.has(entry.norad));
 
 const snapshotFleetEntries = Object.values(liveFleetCache.entries ?? {})

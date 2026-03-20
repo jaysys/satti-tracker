@@ -9,7 +9,7 @@ import {
   listItems,
   updateItem,
 } from "./db.js";
-import { getLeoBackdrop, getSatelliteFleet } from "./satellites.js";
+import { getLeoBackdrop, getSatelliteCatalogSummary, getSatelliteFleet } from "./satellites.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -72,6 +72,10 @@ app.get("/api/satellites/leo-backdrop", async (req, res) => {
   const mode = req.query.mode === "live" ? "live" : "snapshot";
   const payload = await getLeoBackdrop(mode);
   res.json(payload);
+});
+
+app.get("/api/satellites/catalog-summary", (_req, res) => {
+  res.json(getSatelliteCatalogSummary());
 });
 
 app.post("/api/items", (req, res) => {

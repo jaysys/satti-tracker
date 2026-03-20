@@ -6,6 +6,8 @@ import {
   buildFleetEntry,
   isoToDateStamp,
   normalizeOmm,
+  satelliteCatalogAll,
+  satelliteCatalogCsvRows,
   satelliteCatalog,
   snapshotOrbitFleet,
 } from "../shared/satelliteCatalog.js";
@@ -27,6 +29,9 @@ const LEO_GP_REFRESH_MS = 60 * 60 * 1000;
 const LEO_POINT_SNAPSHOT_MS = 10 * 1000;
 const LEO_MEAN_MOTION_MIN = 11.25;
 const KOREAN_NORADS = new Set(satelliteCatalog.map((item) => item.norad));
+const catalogByNorad = new Map(satelliteCatalogAll.map((item) => [item.norad, item]));
+const activeCatalogNorads = new Set(satelliteCatalog.map((item) => item.norad));
+const snapshotByNorad = new Map(snapshotOrbitFleet.map((item) => [String(item.norad), item]));
 
 const liveCache = new Map(loadPersistedFleetCache());
 let leoPopulationCache = loadPersistedLeoCache();
@@ -512,6 +517,135 @@ function getLeoPointSourceState(fetchError) {
   }
 
   return "cached";
+}
+
+function supportsEarthCatalogTrack(item) {
+  return item.orbitClass !== "cislunar" && item.norad !== "53365";
+}
+
+function buildCatalogTrackState(entry) {
+  if (!activeCatalogNorads.has(entry.norad)) {
+    return {
+      key: "decayed",
+      label: "Decayed",
+      detail: "Space-Track decay date recorded",
+    };
+  }
+
+  if (!supportsEarthCatalogTrack(entry)) {
+    return {
+      key: "non-earth",
+      label: "Non-Earth track",
+      detail: "Excluded from Earth-globe orbit render",
+    };
+  }
+
+  const snapshot = snapshotByNorad.get(entry.norad);
+  if (snapshot?.omm || snapshot?.tle) {
+    return {
+      key: "rendered",
+      label: "Rendered on Earth globe",
+      detail: "Ephemeris available",
+    };
+  }
+
+  return {
+    key: "catalog-only",
+    label: "Catalog only",
+    detail: "No public GP/OMM available",
+  };
+}
+
+function toNumber(value) {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function sortByLaunchDateDescending(a, b) {
+  const aDate = a.launchDate ?? "";
+  const bDate = b.launchDate ?? "";
+  if (aDate !== bDate) {
+    return bDate.localeCompare(aDate);
+  }
+
+  return String(b.norad).localeCompare(String(a.norad));
+}
+
+export function getSatelliteCatalogSummary() {
+  const rows = satelliteCatalogCsvRows
+    .map((row) => {
+      const norad = String(row.NORAD_CAT_ID);
+      const catalogEntry = catalogByNorad.get(norad);
+
+      if (!catalogEntry) {
+        return null;
+      }
+
+      const track = buildCatalogTrackState(catalogEntry);
+
+      return {
+        norad,
+        englishName: catalogEntry.englishName ?? catalogEntry.name,
+        domesticName: catalogEntry.domesticName,
+        objectId: row.OBJECT_ID || null,
+        launchDate: row.LAUNCH || null,
+        site: row.SITE || null,
+        current: row.CURRENT === "Y",
+        objectType: row.OBJECT_TYPE || null,
+        orbitClass: catalogEntry.orbitClass,
+        orbitLabel: catalogEntry.orbitLabel,
+        missionType: catalogEntry.missionType,
+        missionLabel: catalogEntry.missionLabel,
+        operationalStatus: catalogEntry.operationalStatus,
+        inclination: toNumber(row.INCLINATION),
+        periodMinutes: toNumber(row.PERIOD),
+        apogeeKm: toNumber(row.APOGEE),
+        perigeeKm: toNumber(row.PERIGEE),
+        launchYear: toNumber(row.LAUNCH_YEAR),
+        trackKey: track.key,
+        trackLabel: track.label,
+        trackDetail: track.detail,
+      };
+    })
+    .filter(Boolean)
+    .sort(sortByLaunchDateDescending);
+
+  const orbitCounts = {
+    leo: rows.filter((row) => row.orbitClass === "leo").length,
+    geo: rows.filter((row) => row.orbitClass === "geo").length,
+    meo: rows.filter((row) => row.orbitClass === "meo").length,
+    cislunar: rows.filter((row) => row.orbitClass === "cislunar").length,
+  };
+  const missionCounts = {
+    earthObservation: rows.filter((row) => row.missionType === "earth-observation").length,
+    communications: rows.filter((row) => row.missionType === "communications").length,
+    technology: rows.filter((row) => row.missionType === "technology").length,
+    science: rows.filter((row) => row.missionType === "science").length,
+  };
+  const launchDates = rows.map((row) => row.launchDate).filter(Boolean).sort();
+
+  return {
+    updatedAt: new Date().toISOString(),
+    summary: {
+      total: rows.length,
+      current: rows.filter((row) => row.current).length,
+      rendered: rows.filter((row) => row.trackKey === "rendered").length,
+      catalogOnly: rows.filter((row) => row.trackKey === "catalog-only").length,
+      nonEarth: rows.filter((row) => row.trackKey === "non-earth").length,
+      decayed: rows.filter((row) => row.trackKey === "decayed").length,
+      orbitCounts,
+      missionCounts,
+      launchSpan: {
+        first: launchDates[0] ?? null,
+        last: launchDates[launchDates.length - 1] ?? null,
+      },
+    },
+    rows,
+  };
 }
 
 export async function getSatelliteFleet(mode = "snapshot") {

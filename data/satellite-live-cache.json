@@ -1,8 +1,8 @@
 {
-  "updatedAt": "2026-03-20T14:46:27.887Z",
+  "updatedAt": "2026-03-20T15:06:34.151Z",
   "entries": {
     "spaceeye-t": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "spaceeye-t",
         "name": "SpaceEye-T",
@@ -22,7 +22,7 @@
         "omm": {
           "CCSDS_OMM_VERS": "3.0",
           "COMMENT": "GENERATED VIA SPACE-TRACK.ORG API",
-          "CREATION_DATE": "2026-03-20T10:06:47",
+          "CREATION_DATE": "2026-03-20T14:46:35",
           "ORIGINATOR": "18 SPCS",
           "OBJECT_NAME": "SPACEEYE-T1",
           "OBJECT_ID": "2025-052V",
@@ -30,41 +30,41 @@
           "REF_FRAME": "TEME",
           "TIME_SYSTEM": "UTC",
           "MEAN_ELEMENT_THEORY": "SGP4",
-          "EPOCH": "2026-03-20T04:22:32.850624",
-          "MEAN_MOTION": 15.21616138,
-          "ECCENTRICITY": 0.00066791,
-          "INCLINATION": 97.4056,
-          "RA_OF_ASC_NODE": 333.1597,
-          "ARG_OF_PERICENTER": 99.1343,
-          "MEAN_ANOMALY": 261.0649,
+          "EPOCH": "2026-03-20T10:41:20.095008",
+          "MEAN_MOTION": 15.21618479,
+          "ECCENTRICITY": 0.0006683,
+          "INCLINATION": 97.4055,
+          "RA_OF_ASC_NODE": 333.4186,
+          "ARG_OF_PERICENTER": 98.4665,
+          "MEAN_ANOMALY": 261.7328,
           "EPHEMERIS_TYPE": 0,
           "CLASSIFICATION_TYPE": "U",
           "NORAD_CAT_ID": 63229,
           "ELEMENT_SET_NO": 999,
-          "REV_AT_EPOCH": 5630,
-          "BSTAR": 0.00018296747,
-          "MEAN_MOTION_DOT": 0.00004063,
+          "REV_AT_EPOCH": 5634,
+          "BSTAR": 0.00019722,
+          "MEAN_MOTION_DOT": 0.00004386,
           "MEAN_MOTION_DDOT": 0,
-          "SEMIMAJOR_AXIS": "6879.102",
+          "SEMIMAJOR_AXIS": "6879.095",
           "PERIOD": "94.636",
-          "APOAPSIS": "505.562",
-          "PERIAPSIS": "496.373",
+          "APOAPSIS": "505.558",
+          "PERIAPSIS": "496.363",
           "OBJECT_TYPE": "PAYLOAD",
           "RCS_SIZE": "LARGE",
           "COUNTRY_CODE": "SKOR",
           "LAUNCH_DATE": "2025-03-15",
           "SITE": "AFWTR",
           "DECAY_DATE": null,
-          "FILE": "5093077",
-          "GP_ID": "316557951",
+          "FILE": "5093838",
+          "GP_ID": "316581777",
           "TLE_LINE0": "0 SPACEEYE-T1",
-          "TLE_LINE1": "1 63229U 25052V   26079.18232466  .00004063  00000-0  18297-3 0  9995",
-          "TLE_LINE2": "2 63229  97.4056 333.1597 0006679  99.1343 261.0649 15.21616138 56309"
+          "TLE_LINE1": "1 63229U 25052V   26079.44537147  .00004386  00000-0  19722-3 0  9990",
+          "TLE_LINE2": "2 63229  97.4055 333.4186 0006683  98.4665 261.7328 15.21618479 56344"
         }
       }
     },
     "kompsat-2": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "kompsat-2",
         "name": "KOMPSAT 2",
@@ -84,7 +84,7 @@
         "omm": {
           "CCSDS_OMM_VERS": "3.0",
           "COMMENT": "GENERATED VIA SPACE-TRACK.ORG API",
-          "CREATION_DATE": "2026-03-20T10:06:47",
+          "CREATION_DATE": "2026-03-20T14:46:35",
           "ORIGINATOR": "18 SPCS",
           "OBJECT_NAME": "KOMPSAT 2",
           "OBJECT_ID": "2006-031A",
@@ -92,41 +92,41 @@
           "REF_FRAME": "TEME",
           "TIME_SYSTEM": "UTC",
           "MEAN_ELEMENT_THEORY": "SGP4",
-          "EPOCH": "2026-03-20T07:06:24.539904",
-          "MEAN_MOTION": 14.64596286,
-          "ECCENTRICITY": 0.00144736,
-          "INCLINATION": 97.8298,
-          "RA_OF_ASC_NODE": 268.0376,
-          "ARG_OF_PERICENTER": 1.4415,
-          "MEAN_ANOMALY": 171.5253,
+          "EPOCH": "2026-03-20T13:09:10.654272",
+          "MEAN_MOTION": 14.64596395,
+          "ECCENTRICITY": 0.0014455,
+          "INCLINATION": 97.8299,
+          "RA_OF_ASC_NODE": 268.2775,
+          "ARG_OF_PERICENTER": 0.5988,
+          "MEAN_ANOMALY": 59.8442,
           "EPHEMERIS_TYPE": 0,
           "CLASSIFICATION_TYPE": "U",
           "NORAD_CAT_ID": 29268,
           "ELEMENT_SET_NO": 999,
-          "REV_AT_EPOCH": 4846,
-          "BSTAR": 0.000001894434,
-          "MEAN_MOTION_DOT": -3.5e-7,
+          "REV_AT_EPOCH": 4850,
+          "BSTAR": -0.0000063018,
+          "MEAN_MOTION_DOT": -7.9e-7,
           "MEAN_MOTION_DDOT": 0,
-          "SEMIMAJOR_AXIS": "7056.509",
+          "SEMIMAJOR_AXIS": "7056.508",
           "PERIOD": "98.321",
-          "APOAPSIS": "688.587",
-          "PERIAPSIS": "668.161",
+          "APOAPSIS": "688.574",
+          "PERIAPSIS": "668.173",
           "OBJECT_TYPE": "PAYLOAD",
           "RCS_SIZE": "LARGE",
           "COUNTRY_CODE": "SKOR",
           "LAUNCH_DATE": "2006-07-28",
           "SITE": "PKMTR",
           "DECAY_DATE": null,
-          "FILE": "5093077",
-          "GP_ID": "316538294",
+          "FILE": "5093792",
+          "GP_ID": "316580688",
           "TLE_LINE0": "0 KOMPSAT 2",
-          "TLE_LINE1": "1 29268U 06031A   26079.29611736 -.00000035  00000-0  18944-5 0  9996",
-          "TLE_LINE2": "2 29268  97.8298 268.0376 0014474   1.4415 171.5253 14.64596286 48466"
+          "TLE_LINE1": "1 29268U 06031A   26079.54803998 -.00000079  00000-0 -63018-5 0  9998",
+          "TLE_LINE2": "2 29268  97.8299 268.2775 0014455   0.5988  59.8442 14.64596395 48500"
         }
       }
     },
     "kompsat-3": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "kompsat-3",
         "name": "KOMPSAT 3",
@@ -188,7 +188,7 @@
       }
     },
     "kompsat-3a": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "kompsat-3a",
         "name": "KOMPSAT 3A",
@@ -250,7 +250,7 @@
       }
     },
     "kompsat-5": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "kompsat-5",
         "name": "KOMPSAT 5",
@@ -312,7 +312,7 @@
       }
     },
     "koreasat-5a": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "koreasat-5a",
         "name": "KOREASAT 5A",
@@ -375,7 +375,7 @@
       }
     },
     "koreasat-6a": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "koreasat-6a",
         "name": "KOREASAT 6A",
@@ -396,7 +396,7 @@
         "omm": {
           "CCSDS_OMM_VERS": "3.0",
           "COMMENT": "GENERATED VIA SPACE-TRACK.ORG API",
-          "CREATION_DATE": "2026-03-20T10:06:47",
+          "CREATION_DATE": "2026-03-20T14:46:35",
           "ORIGINATOR": "18 SPCS",
           "OBJECT_NAME": "KOREASAT 6A",
           "OBJECT_ID": "2024-206A",
@@ -404,41 +404,41 @@
           "REF_FRAME": "TEME",
           "TIME_SYSTEM": "UTC",
           "MEAN_ELEMENT_THEORY": "SGP4",
-          "EPOCH": "2026-03-20T06:26:38.743872",
-          "MEAN_MOTION": 1.00268741,
-          "ECCENTRICITY": 0.00005815,
-          "INCLINATION": 0.0224,
-          "RA_OF_ASC_NODE": 223.7359,
-          "ARG_OF_PERICENTER": 129.2822,
-          "MEAN_ANOMALY": 37.4322,
+          "EPOCH": "2026-03-20T13:26:58.201440",
+          "MEAN_MOTION": 1.00268542,
+          "ECCENTRICITY": 0.000059,
+          "INCLINATION": 0.0217,
+          "RA_OF_ASC_NODE": 222.6051,
+          "ARG_OF_PERICENTER": 129.6242,
+          "MEAN_ANOMALY": 143.5865,
           "EPHEMERIS_TYPE": 0,
           "CLASSIFICATION_TYPE": "U",
           "NORAD_CAT_ID": 61910,
           "ELEMENT_SET_NO": 999,
-          "REV_AT_EPOCH": 494,
+          "REV_AT_EPOCH": 495,
           "BSTAR": 0,
           "MEAN_MOTION_DOT": -0.00000359,
           "MEAN_MOTION_DDOT": 0,
-          "SEMIMAJOR_AXIS": "42165.585",
-          "PERIOD": "1436.141",
-          "APOAPSIS": "35789.902",
-          "PERIAPSIS": "35784.999",
+          "SEMIMAJOR_AXIS": "42165.641",
+          "PERIOD": "1436.143",
+          "APOAPSIS": "35789.994",
+          "PERIAPSIS": "35785.018",
           "OBJECT_TYPE": "PAYLOAD",
           "RCS_SIZE": null,
           "COUNTRY_CODE": "SKOR",
           "LAUNCH_DATE": "2024-11-11",
           "SITE": "AFETR",
           "DECAY_DATE": null,
-          "FILE": "5093077",
-          "GP_ID": "316556851",
+          "FILE": "5093916",
+          "GP_ID": "316580134",
           "TLE_LINE0": "0 KOREASAT 6A",
-          "TLE_LINE1": "1 61910U 24206A   26079.26850398 -.00000359  00000-0  00000-0 0  9994",
-          "TLE_LINE2": "2 61910   0.0224 223.7359 0000582 129.2822  37.4322  1.00268741  4946"
+          "TLE_LINE1": "1 61910U 24206A   26079.56039585 -.00000359  00000-0  00000+0 0  9993",
+          "TLE_LINE2": "2 61910   0.0217 222.6051 0000590 129.6242 143.5865  1.00268542  4955"
         }
       }
     },
     "oscar-23-kitsat-1-22077": {
-      "fetchedAt": "2026-03-20T14:46:27.886Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "oscar-23-kitsat-1-22077",
         "name": "OSCAR 23 (KITSAT 1)",
@@ -458,7 +458,7 @@
         "omm": {
           "CCSDS_OMM_VERS": "3.0",
           "COMMENT": "GENERATED VIA SPACE-TRACK.ORG API",
-          "CREATION_DATE": "2026-03-20T10:06:47",
+          "CREATION_DATE": "2026-03-20T14:46:35",
           "ORIGINATOR": "18 SPCS",
           "OBJECT_NAME": "OSCAR 23 (KITSAT 1)",
           "OBJECT_ID": "1992-052B",
@@ -466,20 +466,20 @@
           "REF_FRAME": "TEME",
           "TIME_SYSTEM": "UTC",
           "MEAN_ELEMENT_THEORY": "SGP4",
-          "EPOCH": "2026-03-20T05:38:31.050240",
-          "MEAN_MOTION": 12.86610445,
-          "ECCENTRICITY": 0.00133134,
+          "EPOCH": "2026-03-20T09:01:49.728864",
+          "MEAN_MOTION": 12.86610425,
+          "ECCENTRICITY": 0.0013313,
           "INCLINATION": 66.0827,
-          "RA_OF_ASC_NODE": 107.4639,
-          "ARG_OF_PERICENTER": 304.1195,
-          "MEAN_ANOMALY": 133.5183,
+          "RA_OF_ASC_NODE": 107.1681,
+          "ARG_OF_PERICENTER": 304.0804,
+          "MEAN_ANOMALY": 67.4478,
           "EPHEMERIS_TYPE": 0,
           "CLASSIFICATION_TYPE": "U",
           "NORAD_CAT_ID": 22077,
           "ELEMENT_SET_NO": 999,
-          "REV_AT_EPOCH": 57824,
-          "BSTAR": 0.00013097828,
-          "MEAN_MOTION_DOT": -2.9e-7,
+          "REV_AT_EPOCH": 57826,
+          "BSTAR": 0.00012288,
+          "MEAN_MOTION_DOT": -3.1e-7,
           "MEAN_MOTION_DDOT": 0,
           "SEMIMAJOR_AXIS": "7693.143",
           "PERIOD": "111.922",
@@ -491,16 +491,16 @@
           "LAUNCH_DATE": "1992-08-10",
           "SITE": "FRGUI",
           "DECAY_DATE": null,
-          "FILE": "5093077",
-          "GP_ID": "316535963",
+          "FILE": "5093659",
+          "GP_ID": "316577389",
           "TLE_LINE0": "0 OSCAR 23 (KITSAT 1)",
-          "TLE_LINE1": "1 22077U 92052B   26079.23508160 -.00000029  00000-0  13098-3 0  9991",
-          "TLE_LINE2": "2 22077  66.0827 107.4639 0013313 304.1195 133.5183 12.86610445578240"
+          "TLE_LINE1": "1 22077U 92052B   26079.37627001 -.00000031  00000-0  12288-3 0  9995",
+          "TLE_LINE2": "2 22077  66.0827 107.1681 0013313 304.0804  67.4478 12.86610425578262"
         }
       }
     },
     "kitsat-b-22828": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "kitsat-b-22828",
         "name": "KITSAT B",
@@ -562,7 +562,7 @@
       }
     },
     "koreasat-1-23639": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "koreasat-1-23639",
         "name": "KOREASAT 1",
@@ -624,7 +624,7 @@
       }
     },
     "abs-1a-koreasat-2-23768": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "abs-1a-koreasat-2-23768",
         "name": "ABS 1A (KOREASAT 2)",
@@ -872,7 +872,7 @@
       }
     },
     "kitsat-3-25756": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "kitsat-3-25756",
         "name": "KITSAT 3",
@@ -934,7 +934,7 @@
       }
     },
     "abs-7-koreasat-3-25894": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "abs-7-koreasat-3-25894",
         "name": "ABS 7 (KOREASAT 3)",
@@ -996,7 +996,7 @@
       }
     },
     "kompsat-26032": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "kompsat-26032",
         "name": "KOMPSAT",
@@ -1058,7 +1058,7 @@
       }
     },
     "kaistsat-4-27945": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "kaistsat-4-27945",
         "name": "KAISTSAT 4",
@@ -1078,7 +1078,7 @@
         "omm": {
           "CCSDS_OMM_VERS": "3.0",
           "COMMENT": "GENERATED VIA SPACE-TRACK.ORG API",
-          "CREATION_DATE": "2026-03-20T10:06:47",
+          "CREATION_DATE": "2026-03-20T14:46:35",
           "ORIGINATOR": "18 SPCS",
           "OBJECT_NAME": "KAISTSAT 4",
           "OBJECT_ID": "2003-042G",
@@ -1086,41 +1086,41 @@
           "REF_FRAME": "TEME",
           "TIME_SYSTEM": "UTC",
           "MEAN_ELEMENT_THEORY": "SGP4",
-          "EPOCH": "2026-03-20T00:22:24.021984",
-          "MEAN_MOTION": 14.67805108,
-          "ECCENTRICITY": 0.00102726,
+          "EPOCH": "2026-03-20T10:11:23.107200",
+          "MEAN_MOTION": 14.67805336,
+          "ECCENTRICITY": 0.0010281,
           "INCLINATION": 98.3748,
-          "RA_OF_ASC_NODE": 245.7095,
-          "ARG_OF_PERICENTER": 256.4013,
-          "MEAN_ANOMALY": 103.6047,
+          "RA_OF_ASC_NODE": 246.1278,
+          "ARG_OF_PERICENTER": 254.9547,
+          "MEAN_ANOMALY": 105.0519,
           "EPHEMERIS_TYPE": 0,
           "CLASSIFICATION_TYPE": "U",
           "NORAD_CAT_ID": 27945,
           "ELEMENT_SET_NO": 999,
-          "REV_AT_EPOCH": 20095,
-          "BSTAR": 0.000084197962,
-          "MEAN_MOTION_DOT": 0.00000429,
+          "REV_AT_EPOCH": 20101,
+          "BSTAR": 0.000082342,
+          "MEAN_MOTION_DOT": 0.00000418,
           "MEAN_MOTION_DDOT": 0,
-          "SEMIMAJOR_AXIS": "7046.221",
+          "SEMIMAJOR_AXIS": "7046.220",
           "PERIOD": "98.106",
-          "APOAPSIS": "675.324",
-          "PERIAPSIS": "660.847",
+          "APOAPSIS": "675.329",
+          "PERIAPSIS": "660.841",
           "OBJECT_TYPE": "PAYLOAD",
           "RCS_SIZE": "MEDIUM",
           "COUNTRY_CODE": "SKOR",
           "LAUNCH_DATE": "2003-09-27",
           "SITE": "PKMTR",
           "DECAY_DATE": null,
-          "FILE": "5093077",
-          "GP_ID": "316538010",
+          "FILE": "5093753",
+          "GP_ID": "316579654",
           "TLE_LINE0": "0 KAISTSAT 4",
-          "TLE_LINE1": "1 27945U 03042G   26079.01555581  .00000429  00000-0  84198-4 0  9999",
-          "TLE_LINE2": "2 27945  98.3748 245.7095 0010273 256.4013 103.6047 14.67805108200951"
+          "TLE_LINE1": "1 27945U 03042G   26079.42457300  .00000418  00000-0  82342-4 0  9991",
+          "TLE_LINE2": "2 27945  98.3748 246.1278 0010281 254.9547 105.0519 14.67805336201014"
         }
       }
     },
     "koreasat-5-29349": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "koreasat-5-29349",
         "name": "KOREASAT 5",
@@ -1140,7 +1140,7 @@
         "omm": {
           "CCSDS_OMM_VERS": "3.0",
           "COMMENT": "GENERATED VIA SPACE-TRACK.ORG API",
-          "CREATION_DATE": "2026-03-20T10:06:47",
+          "CREATION_DATE": "2026-03-20T14:46:35",
           "ORIGINATOR": "18 SPCS",
           "OBJECT_NAME": "KOREASAT 5",
           "OBJECT_ID": "2006-034A",
@@ -1148,41 +1148,41 @@
           "REF_FRAME": "TEME",
           "TIME_SYSTEM": "UTC",
           "MEAN_ELEMENT_THEORY": "SGP4",
-          "EPOCH": "2026-03-20T06:26:38.743872",
-          "MEAN_MOTION": 1.00273081,
-          "ECCENTRICITY": 0.00017921,
-          "INCLINATION": 1.5537,
-          "RA_OF_ASC_NODE": 84.1048,
-          "ARG_OF_PERICENTER": 308.8551,
-          "MEAN_ANOMALY": 354.5563,
+          "EPOCH": "2026-03-20T13:21:10.286784",
+          "MEAN_MOTION": 1.00272491,
+          "ECCENTRICITY": 0.0001773,
+          "INCLINATION": 1.5544,
+          "RA_OF_ASC_NODE": 84.1009,
+          "ARG_OF_PERICENTER": 308.723,
+          "MEAN_ANOMALY": 98.6078,
           "EPHEMERIS_TYPE": 0,
           "CLASSIFICATION_TYPE": "U",
           "NORAD_CAT_ID": 29349,
           "ELEMENT_SET_NO": 999,
-          "REV_AT_EPOCH": 4042,
+          "REV_AT_EPOCH": 4043,
           "BSTAR": 0,
           "MEAN_MOTION_DOT": -0.00000354,
           "MEAN_MOTION_DDOT": 0,
-          "SEMIMAJOR_AXIS": "42164.369",
-          "PERIOD": "1436.078",
-          "APOAPSIS": "35793.790",
-          "PERIAPSIS": "35778.677",
+          "SEMIMAJOR_AXIS": "42164.534",
+          "PERIOD": "1436.087",
+          "APOAPSIS": "35793.875",
+          "PERIAPSIS": "35778.923",
           "OBJECT_TYPE": "PAYLOAD",
           "RCS_SIZE": "LARGE",
           "COUNTRY_CODE": "SKOR",
           "LAUNCH_DATE": "2006-08-22",
           "SITE": "SEAL",
           "DECAY_DATE": null,
-          "FILE": "5093077",
-          "GP_ID": "316538814",
+          "FILE": "5093794",
+          "GP_ID": "316580714",
           "TLE_LINE0": "0 KOREASAT 5",
-          "TLE_LINE1": "1 29349U 06034A   26079.26850398 -.00000354  00000-0  00000-0 0  9998",
-          "TLE_LINE2": "2 29349   1.5537  84.1048 0001792 308.8551 354.5563  1.00273081 40427"
+          "TLE_LINE1": "1 29349U 06034A   26079.55636906 -.00000354  00000-0  00000+0 0  9996",
+          "TLE_LINE2": "2 29349   1.5544  84.1009 0001773 308.7230  98.6078  1.00272491 40436"
         }
       }
     },
     "coms-1-36744": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "coms-1-36744",
         "name": "COMS 1",
@@ -1244,7 +1244,7 @@
       }
     },
     "koreasat-6-37265": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "koreasat-6-37265",
         "name": "KOREASAT 6",
@@ -1430,7 +1430,7 @@
       }
     },
     "stsat-3-39422": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "stsat-3-39422",
         "name": "STSAT 3",
@@ -1492,7 +1492,7 @@
       }
     },
     "koreasat-7-42691": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "koreasat-7-42691",
         "name": "KOREASAT 7",
@@ -1616,7 +1616,7 @@
       }
     },
     "nextsat-1-43811": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "nextsat-1-43811",
         "name": "NEXTSAT-1",
@@ -1678,7 +1678,7 @@
       }
     },
     "snuglite-43784": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "snuglite-43784",
         "name": "SNUGLITE",
@@ -1740,7 +1740,7 @@
       }
     },
     "snusat-2-43782": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "snusat-2-43782",
         "name": "SNUSAT-2",
@@ -1802,7 +1802,7 @@
       }
     },
     "geo-kompsat-2a-43823": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "geo-kompsat-2a-43823",
         "name": "GEO-KOMPSAT-2A",
@@ -1864,7 +1864,7 @@
       }
     },
     "geo-kompsat-2b-45246": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "geo-kompsat-2b-45246",
         "name": "GEO-KOMPSAT-2B",
@@ -1926,7 +1926,7 @@
       }
     },
     "koreasat-116-45920": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "koreasat-116-45920",
         "name": "KOREASAT 116",
@@ -1988,7 +1988,7 @@
       }
     },
     "cas500-1-47932": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "cas500-1-47932",
         "name": "CAS500-1",
@@ -2050,7 +2050,7 @@
       }
     },
     "step-cube-lab-ii-52897": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "step-cube-lab-ii-52897",
         "name": "STEP CUBE LAB-II",
@@ -2112,7 +2112,7 @@
       }
     },
     "pvsat-52894": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "pvsat-52894",
         "name": "PVSAT",
@@ -2174,7 +2174,7 @@
       }
     },
     "kslv-ii-dummy-52895": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "kslv-ii-dummy-52895",
         "name": "KSLV-II DUMMY",
@@ -2236,7 +2236,7 @@
       }
     },
     "randev-52898": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "randev-52898",
         "name": "RANDEV",
@@ -2298,7 +2298,7 @@
       }
     },
     "dummy-cubesat-52983": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "dummy-cubesat-52983",
         "name": "DUMMY CUBESAT",
@@ -2360,7 +2360,7 @@
       }
     },
     "miman-52900": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "miman-52900",
         "name": "MIMAN",
@@ -2422,7 +2422,7 @@
       }
     },
     "snuglite-ii-52899": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "snuglite-ii-52899",
         "name": "SNUGLITE-II",
@@ -2484,7 +2484,7 @@
       }
     },
     "kplo-53365": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "kplo-53365",
         "name": "KPLO",
@@ -2546,7 +2546,7 @@
       }
     },
     "nextsat-2-56743": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "nextsat-2-56743",
         "name": "NEXTSAT-2",
@@ -2608,7 +2608,7 @@
       }
     },
     "observer-1a-58323": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "observer-1a-58323",
         "name": "OBSERVER-1A",
@@ -2670,7 +2670,7 @@
       }
     },
     "korsat-7-58463": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "korsat-7-58463",
         "name": "KORSAT 7",
@@ -2690,7 +2690,7 @@
         "omm": {
           "CCSDS_OMM_VERS": "3.0",
           "COMMENT": "GENERATED VIA SPACE-TRACK.ORG API",
-          "CREATION_DATE": "2026-03-20T10:06:47",
+          "CREATION_DATE": "2026-03-20T14:46:35",
           "ORIGINATOR": "18 SPCS",
           "OBJECT_NAME": "KORSAT 7",
           "OBJECT_ID": "2023-185B",
@@ -2698,41 +2698,41 @@
           "REF_FRAME": "TEME",
           "TIME_SYSTEM": "UTC",
           "MEAN_ELEMENT_THEORY": "SGP4",
-          "EPOCH": "2026-03-20T06:09:01.728000",
-          "MEAN_MOTION": 15.00948197,
-          "ECCENTRICITY": 0.00214847,
+          "EPOCH": "2026-03-20T12:33:01.567584",
+          "MEAN_MOTION": 15.00949407,
+          "ECCENTRICITY": 0.0021462,
           "INCLINATION": 97.6243,
-          "RA_OF_ASC_NODE": 145.1645,
-          "ARG_OF_PERICENTER": 271.5776,
-          "MEAN_ANOMALY": 88.2987,
+          "RA_OF_ASC_NODE": 145.4262,
+          "ARG_OF_PERICENTER": 270.6267,
+          "MEAN_ANOMALY": 89.2498,
           "EPHEMERIS_TYPE": 0,
           "CLASSIFICATION_TYPE": "U",
           "NORAD_CAT_ID": 58463,
           "ELEMENT_SET_NO": 999,
-          "REV_AT_EPOCH": 12594,
-          "BSTAR": 0.00016050254,
-          "MEAN_MOTION_DOT": 0.00001995,
+          "REV_AT_EPOCH": 12598,
+          "BSTAR": 0.00016295,
+          "MEAN_MOTION_DOT": 0.00002026,
           "MEAN_MOTION_DDOT": 0,
-          "SEMIMAJOR_AXIS": "6942.108",
+          "SEMIMAJOR_AXIS": "6942.104",
           "PERIOD": "95.939",
-          "APOAPSIS": "578.888",
-          "PERIAPSIS": "549.058",
+          "APOAPSIS": "578.869",
+          "PERIAPSIS": "549.070",
           "OBJECT_TYPE": "PAYLOAD",
           "RCS_SIZE": "LARGE",
           "COUNTRY_CODE": "SKOR",
           "LAUNCH_DATE": "2023-12-01",
           "SITE": "AFWTR",
           "DECAY_DATE": null,
-          "FILE": "5093077",
-          "GP_ID": "316553923",
+          "FILE": "5093701",
+          "GP_ID": "316578455",
           "TLE_LINE0": "0 KORSAT 7",
-          "TLE_LINE1": "1 58463U 23185B   26079.25627000  .00001995  00000-0  16050-3 0  9990",
-          "TLE_LINE2": "2 58463  97.6243 145.1645 0021485 271.5776  88.2987 15.00948197125947"
+          "TLE_LINE1": "1 58463U 23185B   26079.52293481  .00002026  00000-0  16295-3 0  9999",
+          "TLE_LINE2": "2 58463  97.6243 145.4262 0021462 270.6267  89.2498 15.00949407125982"
         }
       }
     },
     "doory-sat-58500": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "doory-sat-58500",
         "name": "DOORY-SAT",
@@ -2752,7 +2752,7 @@
         "omm": {
           "CCSDS_OMM_VERS": "3.0",
           "COMMENT": "GENERATED VIA SPACE-TRACK.ORG API",
-          "CREATION_DATE": "2026-03-20T10:06:47",
+          "CREATION_DATE": "2026-03-20T14:46:35",
           "ORIGINATOR": "18 SPCS",
           "OBJECT_NAME": "DOORY-SAT",
           "OBJECT_ID": "2023-188A",
@@ -2760,41 +2760,41 @@
           "REF_FRAME": "TEME",
           "TIME_SYSTEM": "UTC",
           "MEAN_ELEMENT_THEORY": "SGP4",
-          "EPOCH": "2026-03-20T07:16:57.628128",
-          "MEAN_MOTION": 14.80381619,
-          "ECCENTRICITY": 0.0008938,
+          "EPOCH": "2026-03-20T12:08:31.125120",
+          "MEAN_MOTION": 14.80381652,
+          "ECCENTRICITY": 0.0008926,
           "INCLINATION": 46.9827,
-          "RA_OF_ASC_NODE": 9.9102,
-          "ARG_OF_PERICENTER": 331.0692,
-          "MEAN_ANOMALY": 28.9706,
+          "RA_OF_ASC_NODE": 8.9194,
+          "ARG_OF_PERICENTER": 332.0003,
+          "MEAN_ANOMALY": 28.041,
           "EPHEMERIS_TYPE": 0,
           "CLASSIFICATION_TYPE": "U",
           "NORAD_CAT_ID": 58500,
           "ELEMENT_SET_NO": 999,
-          "REV_AT_EPOCH": 12382,
-          "BSTAR": 0.00019543111,
-          "MEAN_MOTION_DOT": 0.00001304,
+          "REV_AT_EPOCH": 12385,
+          "BSTAR": 0.00018879,
+          "MEAN_MOTION_DOT": 0.00001252,
           "MEAN_MOTION_DDOT": 0,
           "SEMIMAJOR_AXIS": "7006.257",
           "PERIOD": "97.272",
-          "APOAPSIS": "634.384",
-          "PERIAPSIS": "621.860",
+          "APOAPSIS": "634.375",
+          "PERIAPSIS": "621.868",
           "OBJECT_TYPE": "PAYLOAD",
           "RCS_SIZE": "MEDIUM",
           "COUNTRY_CODE": "SKOR",
           "LAUNCH_DATE": "2023-12-04",
           "SITE": "JJSLA",
           "DECAY_DATE": null,
-          "FILE": "5093077",
-          "GP_ID": "316553939",
+          "FILE": "5093702",
+          "GP_ID": "316578471",
           "TLE_LINE0": "0 DOORY-SAT",
-          "TLE_LINE1": "1 58500U 23188A   26079.30344477  .00001304  00000-0  19543-3 0  9999",
-          "TLE_LINE2": "2 58500  46.9827   9.9102 0008938 331.0692  28.9706 14.80381619123828"
+          "TLE_LINE1": "1 58500U 23188A   26079.50591580  .00001252  00000-0  18879-3 0  9993",
+          "TLE_LINE2": "2 58500  46.9827   8.9194 0008926 332.0003  28.0410 14.80381652123855"
         }
       }
     },
     "contecsat-1-59117": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "contecsat-1-59117",
         "name": "CONTECSAT-1",
@@ -2856,7 +2856,7 @@
       }
     },
     "korsat-1-59452": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "korsat-1-59452",
         "name": "KORSAT-1",
@@ -2876,7 +2876,7 @@
         "omm": {
           "CCSDS_OMM_VERS": "3.0",
           "COMMENT": "GENERATED VIA SPACE-TRACK.ORG API",
-          "CREATION_DATE": "2026-03-20T10:06:47",
+          "CREATION_DATE": "2026-03-20T14:46:35",
           "ORIGINATOR": "18 SPCS",
           "OBJECT_NAME": "KORSAT-1",
           "OBJECT_ID": "2024-066L",
@@ -2886,17 +2886,17 @@
           "MEAN_ELEMENT_THEORY": "SGP4",
           "EPOCH": "2026-03-20T07:23:39.539328",
           "MEAN_MOTION": 14.99813995,
-          "ECCENTRICITY": 0.00106515,
+          "ECCENTRICITY": 0.0010652,
           "INCLINATION": 45.4124,
           "RA_OF_ASC_NODE": 344.8709,
-          "ARG_OF_PERICENTER": 265.3278,
+          "ARG_OF_PERICENTER": 265.3277,
           "MEAN_ANOMALY": 94.6385,
           "EPHEMERIS_TYPE": 0,
           "CLASSIFICATION_TYPE": "U",
           "NORAD_CAT_ID": 59452,
           "ELEMENT_SET_NO": 999,
           "REV_AT_EPOCH": 10672,
-          "BSTAR": 0.00027917788,
+          "BSTAR": 0.00027918,
           "MEAN_MOTION_DOT": 0.00003279,
           "MEAN_MOTION_DDOT": 0,
           "SEMIMAJOR_AXIS": "6945.608",
@@ -2909,16 +2909,16 @@
           "LAUNCH_DATE": "2024-04-07",
           "SITE": "AFETR",
           "DECAY_DATE": null,
-          "FILE": "5093077",
-          "GP_ID": "316555328",
+          "FILE": "5093722",
+          "GP_ID": "316579224",
           "TLE_LINE0": "0 KORSAT-1",
           "TLE_LINE1": "1 59452U 24066L   26079.30809652  .00003279  00000-0  27918-3 0  9991",
-          "TLE_LINE2": "2 59452  45.4124 344.8709 0010652 265.3278  94.6385 14.99813995106728"
+          "TLE_LINE2": "2 59452  45.4124 344.8709 0010652 265.3277  94.6385 14.99813995106727"
         }
       }
     },
     "neonsat-1-59587": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "neonsat-1-59587",
         "name": "NEONSAT-1",
@@ -2980,7 +2980,7 @@
       }
     },
     "korsat-2-62377": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "korsat-2-62377",
         "name": "KORSAT-2",
@@ -3000,7 +3000,7 @@
         "omm": {
           "CCSDS_OMM_VERS": "3.0",
           "COMMENT": "GENERATED VIA SPACE-TRACK.ORG API",
-          "CREATION_DATE": "2026-03-20T10:06:47",
+          "CREATION_DATE": "2026-03-20T14:46:35",
           "ORIGINATOR": "18 SPCS",
           "OBJECT_NAME": "KORSAT-2",
           "OBJECT_ID": "2024-247A",
@@ -3008,9 +3008,9 @@
           "REF_FRAME": "TEME",
           "TIME_SYSTEM": "UTC",
           "MEAN_ELEMENT_THEORY": "SGP4",
-          "EPOCH": "2026-03-20T06:31:43.803264",
+          "EPOCH": "2026-03-20T06:31:43.802400",
           "MEAN_MOTION": 14.9899925,
-          "ECCENTRICITY": 0.00088488,
+          "ECCENTRICITY": 0.0008849,
           "INCLINATION": 45.4104,
           "RA_OF_ASC_NODE": 168.6921,
           "ARG_OF_PERICENTER": 114.5161,
@@ -3020,7 +3020,7 @@
           "NORAD_CAT_ID": 62377,
           "ELEMENT_SET_NO": 999,
           "REV_AT_EPOCH": 6822,
-          "BSTAR": 0.000025400077,
+          "BSTAR": 0.0000254,
           "MEAN_MOTION_DOT": 8.2e-7,
           "MEAN_MOTION_DDOT": 0,
           "SEMIMAJOR_AXIS": "6948.124",
@@ -3033,16 +3033,16 @@
           "LAUNCH_DATE": "2024-12-21",
           "SITE": "AFWTR",
           "DECAY_DATE": null,
-          "FILE": "5093077",
-          "GP_ID": "316557056",
+          "FILE": "5093802",
+          "GP_ID": "316580814",
           "TLE_LINE0": "0 KORSAT-2",
-          "TLE_LINE1": "1 62377U 24247A   26079.27203476  .00000082  00000-0  25400-4 0  9994",
+          "TLE_LINE1": "1 62377U 24247A   26079.27203475  .00000082  00000-0  25400-4 0  9993",
           "TLE_LINE2": "2 62377  45.4104 168.6921 0008849 114.5161 245.6641 14.98999250 68228"
         }
       }
     },
     "jinjusat-1b-63210": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "jinjusat-1b-63210",
         "name": "JINJUSAT-1B",
@@ -3062,7 +3062,7 @@
         "omm": {
           "CCSDS_OMM_VERS": "3.0",
           "COMMENT": "GENERATED VIA SPACE-TRACK.ORG API",
-          "CREATION_DATE": "2026-03-20T10:06:47",
+          "CREATION_DATE": "2026-03-20T14:46:35",
           "ORIGINATOR": "18 SPCS",
           "OBJECT_NAME": "JINJUSAT-1B",
           "OBJECT_ID": "2025-052A",
@@ -3070,41 +3070,41 @@
           "REF_FRAME": "TEME",
           "TIME_SYSTEM": "UTC",
           "MEAN_ELEMENT_THEORY": "SGP4",
-          "EPOCH": "2026-03-20T04:34:22.344096",
-          "MEAN_MOTION": 15.30560714,
-          "ECCENTRICITY": 0.0005164,
+          "EPOCH": "2026-03-20T10:50:56.823648",
+          "MEAN_MOTION": 15.30567187,
+          "ECCENTRICITY": 0.0005142,
           "INCLINATION": 97.4107,
-          "RA_OF_ASC_NODE": 335.9676,
-          "ARG_OF_PERICENTER": 59.1395,
-          "MEAN_ANOMALY": 301.0353,
+          "RA_OF_ASC_NODE": 336.2286,
+          "ARG_OF_PERICENTER": 58.5633,
+          "MEAN_ANOMALY": 301.611,
           "EPHEMERIS_TYPE": 0,
           "CLASSIFICATION_TYPE": "U",
           "NORAD_CAT_ID": 63210,
           "ELEMENT_SET_NO": 999,
-          "REV_AT_EPOCH": 5647,
-          "BSTAR": 0.00038207978,
-          "MEAN_MOTION_DOT": 0.00011221,
+          "REV_AT_EPOCH": 5651,
+          "BSTAR": 0.00041142,
+          "MEAN_MOTION_DOT": 0.00012093,
           "MEAN_MOTION_DDOT": 0,
-          "SEMIMAJOR_AXIS": "6852.275",
+          "SEMIMAJOR_AXIS": "6852.256",
           "PERIOD": "94.083",
-          "APOAPSIS": "477.679",
-          "PERIAPSIS": "470.602",
+          "APOAPSIS": "477.644",
+          "PERIAPSIS": "470.598",
           "OBJECT_TYPE": "PAYLOAD",
           "RCS_SIZE": "SMALL",
           "COUNTRY_CODE": "SKOR",
           "LAUNCH_DATE": "2025-03-15",
           "SITE": "AFWTR",
           "DECAY_DATE": null,
-          "FILE": "5093077",
-          "GP_ID": "316557942",
+          "FILE": "5093838",
+          "GP_ID": "316582268",
           "TLE_LINE0": "0 JINJUSAT-1B",
-          "TLE_LINE1": "1 63210U 25052A   26079.19053639  .00011221  00000-0  38208-3 0  9997",
-          "TLE_LINE2": "2 63210  97.4107 335.9676 0005164  59.1395 301.0353 15.30560714 56478"
+          "TLE_LINE1": "1 63210U 25052A   26079.45204657  .00012093  00000-0  41142-3 0  9993",
+          "TLE_LINE2": "2 63210  97.4107 336.2286 0005142  58.5633 301.6110 15.30567187 56516"
         }
       }
     },
     "korsat-3-63630": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "korsat-3-63630",
         "name": "KORSAT-3",
@@ -3124,7 +3124,7 @@
         "omm": {
           "CCSDS_OMM_VERS": "3.0",
           "COMMENT": "GENERATED VIA SPACE-TRACK.ORG API",
-          "CREATION_DATE": "2026-03-20T10:06:47",
+          "CREATION_DATE": "2026-03-20T14:46:35",
           "ORIGINATOR": "18 SPCS",
           "OBJECT_NAME": "KORSAT-3",
           "OBJECT_ID": "2025-081A",
@@ -3132,41 +3132,41 @@
           "REF_FRAME": "TEME",
           "TIME_SYSTEM": "UTC",
           "MEAN_ELEMENT_THEORY": "SGP4",
-          "EPOCH": "2026-03-20T06:49:41.240640",
-          "MEAN_MOTION": 14.99485606,
-          "ECCENTRICITY": 0.00085129,
+          "EPOCH": "2026-03-20T13:13:26.133888",
+          "MEAN_MOTION": 14.99487025,
+          "ECCENTRICITY": 0.0008517,
           "INCLINATION": 45.4113,
-          "RA_OF_ASC_NODE": 76.6979,
-          "ARG_OF_PERICENTER": 92.3603,
-          "MEAN_ANOMALY": 267.825,
+          "RA_OF_ASC_NODE": 75.3146,
+          "ARG_OF_PERICENTER": 94.0558,
+          "MEAN_ANOMALY": 266.1294,
           "EPHEMERIS_TYPE": 0,
           "CLASSIFICATION_TYPE": "U",
           "NORAD_CAT_ID": 63630,
           "ELEMENT_SET_NO": 999,
-          "REV_AT_EPOCH": 4984,
-          "BSTAR": 0.00025119189,
-          "MEAN_MOTION_DOT": 0.00002899,
+          "REV_AT_EPOCH": 4988,
+          "BSTAR": 0.00026665,
+          "MEAN_MOTION_DOT": 0.00003092,
           "MEAN_MOTION_DDOT": 0,
-          "SEMIMAJOR_AXIS": "6946.622",
+          "SEMIMAJOR_AXIS": "6946.617",
           "PERIOD": "96.033",
-          "APOAPSIS": "574.400",
-          "PERIAPSIS": "562.573",
+          "APOAPSIS": "574.399",
+          "PERIAPSIS": "562.566",
           "OBJECT_TYPE": "PAYLOAD",
           "RCS_SIZE": "LARGE",
           "COUNTRY_CODE": "SKOR",
           "LAUNCH_DATE": "2025-04-22",
           "SITE": "AFETR",
           "DECAY_DATE": null,
-          "FILE": "5093077",
-          "GP_ID": "316558611",
+          "FILE": "5093851",
+          "GP_ID": "316581943",
           "TLE_LINE0": "0 KORSAT-3",
-          "TLE_LINE1": "1 63630U 25081A   26079.28450510  .00002899  00000-0  25119-3 0  9992",
-          "TLE_LINE2": "2 63630  45.4113  76.6979 0008513  92.3603 267.8250 14.99485606 49849"
+          "TLE_LINE1": "1 63630U 25081A   26079.55099692  .00003092  00000-0  26665-3 0  9995",
+          "TLE_LINE2": "2 63630  45.4113  75.3146 0008517  94.0558 266.1294 14.99487025 49884"
         }
       }
     },
     "cas500-3-66655": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "cas500-3-66655",
         "name": "CAS500-3",
@@ -3228,7 +3228,7 @@
       }
     },
     "gyeonggisat-1-66771": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "gyeonggisat-1-66771",
         "name": "GYEONGGISAT-1",
@@ -3290,7 +3290,7 @@
       }
     },
     "neonsat-1a-67614": {
-      "fetchedAt": "2026-03-20T14:46:27.887Z",
+      "fetchedAt": "2026-03-20T15:06:34.151Z",
       "fleetEntry": {
         "id": "neonsat-1a-67614",
         "name": "NEONSAT-1A",
