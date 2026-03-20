@@ -1,14 +1,11 @@
 import { Button, NonIdealState, Spinner } from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
 import { useEffect, useRef, useState } from "react";
-import { snapshotOrbitFleet } from "../../shared/satelliteCatalog.js";
-
-export const orbitFleet = snapshotOrbitFleet;
 
 const seoulHomeView = {
   longitude: 126.978,
   latitude: 37.5665,
-  range: 1800000,
+  range: 4500000,
   heading: 0,
   pitch: -Math.PI / 2,
   roll: 0,
@@ -17,11 +14,13 @@ const seoulHomeView = {
 const initialGlobeView = {
   longitude: 126.978,
   latitude: 18,
-  height: 22000000,
+  height: 16500000,
   heading: 0,
   pitch: -Math.PI / 2,
   roll: 0,
 };
+
+const CLOCK_WINDOW_MINUTES = 180;
 
 function formatDegrees(value, axis) {
   const suffix = axis === "lat" ? (value >= 0 ? "N" : "S") : value >= 0 ? "E" : "W";
@@ -49,9 +48,44 @@ function computeState(satelliteLib, satrec, date) {
   };
 }
 
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function getOrbitPeriodMinutes(item) {
+  const periodFromOmm = Number(item?.omm?.PERIOD);
+  if (Number.isFinite(periodFromOmm) && periodFromOmm > 0) {
+    return periodFromOmm;
+  }
+
+  const meanMotion = Number(item?.omm?.MEAN_MOTION);
+  if (Number.isFinite(meanMotion) && meanMotion > 0) {
+    return 1440 / meanMotion;
+  }
+
+  return item?.orbitClass === "geo" ? 1436 : 96;
+}
+
+function getOrbitSamplingConfig(item) {
+  const periodMinutes = clamp(getOrbitPeriodMinutes(item), 90, 1436);
+  const halfWindowMinutes = periodMinutes / 2;
+  const sampleStepMinutes = clamp(periodMinutes / 90, 2, 20);
+
+  return {
+    periodMinutes,
+    halfWindowMinutes,
+    sampleStepMinutes,
+  };
+}
+
+function supportsEarthGlobeTrack(item) {
+  return item.orbitClass !== "cislunar";
+}
+
 export default function CesiumOrbitDemo({
-  fleet = orbitFleet,
+  fleet = [],
   leoPoints = [],
+  onSatelliteSelectionChange,
   onTelemetryChange,
   onPointSelectionChange,
 }) {
@@ -62,8 +96,18 @@ export default function CesiumOrbitDemo({
   const pointCollectionRef = useRef(null);
   const koreanFleetRef = useRef([]);
   const clickHandlerRef = useRef(null);
+  const pointSelectionCallbackRef = useRef(onPointSelectionChange);
+  const satelliteSelectionCallbackRef = useRef(onSatelliteSelectionChange);
   const [status, setStatus] = useState("loading");
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    pointSelectionCallbackRef.current = onPointSelectionChange;
+  }, [onPointSelectionChange]);
+
+  useEffect(() => {
+    satelliteSelectionCallbackRef.current = onSatelliteSelectionChange;
+  }, [onSatelliteSelectionChange]);
 
   useEffect(() => {
     let cancelled = false;
@@ -133,7 +177,7 @@ export default function CesiumOrbitDemo({
 
         const now = new Date();
         const startTime = Cesium.JulianDate.fromDate(now);
-        const stopTime = Cesium.JulianDate.addMinutes(startTime, 96, new Cesium.JulianDate());
+        const stopTime = Cesium.JulianDate.addMinutes(startTime, CLOCK_WINDOW_MINUTES, new Cesium.JulianDate());
         viewer.clock.startTime = startTime.clone();
         viewer.clock.stopTime = stopTime.clone();
         viewer.clock.currentTime = startTime.clone();
@@ -143,8 +187,10 @@ export default function CesiumOrbitDemo({
         const clickHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
         clickHandler.setInputAction((movement) => {
           const picked = viewer.scene.pick(movement.position);
-          const payload = picked?.id?.kind === "leo-point" ? picked.id.payload : null;
-          onPointSelectionChange?.(payload);
+          const pointPayload = picked?.id?.kind === "leo-point" ? picked.id.payload : null;
+          const satellitePayload = picked?.id?.kind === "korean-satellite" ? picked.id.payload : null;
+          pointSelectionCallbackRef.current?.(pointPayload);
+          satelliteSelectionCallbackRef.current?.(satellitePayload);
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
         clickHandlerRef.current = clickHandler;
 
@@ -180,7 +226,7 @@ export default function CesiumOrbitDemo({
         container.innerHTML = "";
       }
     };
-  }, [onPointSelectionChange]);
+  }, []);
 
   useEffect(() => {
     if (status !== "ready") {
@@ -203,14 +249,27 @@ export default function CesiumOrbitDemo({
     const now = new Date();
     const startTime = Cesium.JulianDate.fromDate(now);
     const nextFleet = fleet.map((item) => {
+      if (!supportsEarthGlobeTrack(item) || (!item.omm && !item.tle)) {
+        return {
+          ...item,
+          satrec: null,
+          entity: null,
+          isAvailable: false,
+        };
+      }
+
       const satrec = item.omm
         ? satellite.json2satrec(item.omm)
         : satellite.twoline2satrec(item.tle[0], item.tle[1]);
+      const { halfWindowMinutes, sampleStepMinutes } = getOrbitSamplingConfig(item);
 
       const sampled = new Cesium.SampledPositionProperty();
       let sampleCount = 0;
 
-      for (let minute = 0; minute <= 96; minute += 4) {
+      const sampleStartMinute = -halfWindowMinutes;
+      const sampleStopMinute = CLOCK_WINDOW_MINUTES + halfWindowMinutes;
+
+      for (let minute = sampleStartMinute; minute <= sampleStopMinute; minute += sampleStepMinutes) {
         const sampleTime = Cesium.JulianDate.addMinutes(startTime, minute, new Cesium.JulianDate());
         const state = computeState(satellite, satrec, Cesium.JulianDate.toDate(sampleTime));
         if (!state) {
@@ -243,30 +302,41 @@ export default function CesiumOrbitDemo({
       });
 
       const entity = viewer.entities.add({
-        name: item.name,
+        name: item.englishName ?? item.name,
         position: sampled,
         point: {
-          pixelSize: 9,
+          pixelSize: 13,
           color: Cesium.Color.fromCssColorString(item.color),
-          outlineColor: Cesium.Color.WHITE,
-          outlineWidth: 1,
+          outlineColor: Cesium.Color.fromCssColorString("#f5fbff"),
+          outlineWidth: 2,
         },
         label: {
-          text: item.name,
-          font: '12px "IBM Plex Sans", sans-serif',
-          fillColor: Cesium.Color.WHITE,
+          text: item.englishName ?? item.name,
+          font: '13px "IBM Plex Sans", sans-serif',
+          style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+          fillColor: Cesium.Color.fromCssColorString("#f5fbff"),
+          outlineColor: Cesium.Color.fromCssColorString("#04111d"),
+          outlineWidth: 3,
           showBackground: true,
-          backgroundColor: Cesium.Color.fromCssColorString("#07111d").withAlpha(0.72),
-          pixelOffset: new Cesium.Cartesian2(0, -18),
+          backgroundColor: Cesium.Color.fromCssColorString("#04111d").withAlpha(0.84),
+          pixelOffset: new Cesium.Cartesian2(0, -20),
         },
         path: {
           resolution: 120,
-          leadTime: 5400,
-          trailTime: 5400,
-          width: item.name === "SpaceEye-T" ? 3 : 2,
-          material: Cesium.Color.fromCssColorString(item.color).withAlpha(0.75),
+          leadTime: halfWindowMinutes * 60,
+          trailTime: halfWindowMinutes * 60,
+          width: item.name === "SpaceEye-T" ? 1.2 : 0.8,
+          material: new Cesium.PolylineDashMaterialProperty({
+            color: Cesium.Color.fromCssColorString(item.color).withAlpha(0.92),
+            gapColor: Cesium.Color.fromCssColorString("#ffffff").withAlpha(0.08),
+            dashLength: 14,
+          }),
         },
       });
+      entity.kind = "korean-satellite";
+      entity.payload = {
+        norad: item.norad,
+      };
 
       return {
         ...item,
@@ -324,6 +394,25 @@ export default function CesiumOrbitDemo({
     function updateTelemetry() {
       const currentDate = Cesium.JulianDate.toDate(viewer.clock.currentTime);
       const nextTelemetry = koreanFleetRef.current.map((item) => {
+        if (!item.satrec) {
+          return {
+            name: item.englishName ?? item.name,
+            domesticName: item.domesticName,
+            latitude: null,
+            longitude: supportsEarthGlobeTrack(item) ? item.sourceLabel : "Earth-globe track unsupported",
+            altitude: null,
+            color: item.color,
+            sourceDate: item.sourceDate,
+            sourceLabel: supportsEarthGlobeTrack(item) ? "Ephemeris unavailable" : "Earth-globe track unsupported",
+            sourceState: item.sourceState,
+            orbitLabel: item.orbitLabel,
+            missionLabel: item.missionLabel,
+            operationalStatus: item.operationalStatus,
+            orbitalSlot: item.orbitalSlot,
+            norad: item.norad,
+          };
+        }
+
         const state = computeState(satellite, item.satrec, currentDate);
         if (!state) {
           return {
@@ -345,7 +434,7 @@ export default function CesiumOrbitDemo({
         }
 
         return {
-          name: item.name,
+          name: item.englishName ?? item.name,
           domesticName: item.domesticName,
           latitude: formatDegrees(state.latitude, "lat"),
           longitude: formatDegrees(state.longitude, "lon"),

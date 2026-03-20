@@ -1,7 +1,7 @@
-import { Button, Card, Intent, ProgressBar, Tag, Tooltip } from "@blueprintjs/core";
+import { Button, Card, InputGroup, Intent, ProgressBar, Tag, Tooltip } from "@blueprintjs/core";
 import { useEffect, useMemo, useState } from "react";
 import { fetchLeoBackdrop, fetchSatelliteFleet } from "../api";
-import CesiumOrbitDemo, { orbitFleet } from "./CesiumOrbitDemo";
+import CesiumOrbitDemo from "./CesiumOrbitDemo";
 
 const ORBIT_SOURCE_MODE_STORAGE_KEY = "pulse-desk:orbit-source-mode";
 
@@ -61,7 +61,7 @@ function getSourceStateMeta(sourceState) {
   }
 
   return {
-    label: "snapshot",
+    label: "내장 스냅샷",
     intent: Intent.NONE,
     description: "앱에 번들된 기본 스냅샷 값이다. 캐시가 없거나 외부 갱신이 안 될 때 fallback으로 쓴다.",
   };
@@ -118,6 +118,26 @@ function formatPointAltitude(value) {
   return Number.isFinite(value) ? `${Math.round(value)} km` : "unknown";
 }
 
+function getGroupLabel(orbitClass) {
+  if (orbitClass === "geo") {
+    return "GEO";
+  }
+
+  if (orbitClass === "meo") {
+    return "MEO";
+  }
+
+  if (orbitClass === "cislunar") {
+    return "Cislunar";
+  }
+
+  return "LEO";
+}
+
+function supportsEarthGlobeTrack(item) {
+  return item.orbitClass !== "cislunar" && item.norad !== "53365";
+}
+
 export function OrbitCasePanel() {
   const [telemetry, setTelemetry] = useState([]);
   const [sourceMode, setSourceMode] = useState(() => {
@@ -130,17 +150,26 @@ export function OrbitCasePanel() {
   });
   const [orbitFilter, setOrbitFilter] = useState("all");
   const [missionFilter, setMissionFilter] = useState("all");
-  const [fleet, setFleet] = useState(orbitFleet);
+  const [fleet, setFleet] = useState([]);
   const [sourceMeta, setSourceMeta] = useState({
-    provider: "Bundled snapshot",
+    provider: "내장 스냅샷",
     isFallback: false,
     warning: "",
     updatedAt: null,
-    freshnessLabel: "bundled",
-    cachePolicy: "Static snapshot",
+    freshnessLabel: "embedded",
+    cachePolicy: "내장 스냅샷",
   });
   const [loadingFleet, setLoadingFleet] = useState(false);
   const [showGlobalLeo, setShowGlobalLeo] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSatelliteNorad, setSelectedSatelliteNorad] = useState(null);
+  const [expandedGroups, setExpandedGroups] = useState({
+    leo: true,
+    geo: true,
+    meo: false,
+    cislunar: true,
+    unavailable: true,
+  });
   const [leoBackdrop, setLeoBackdrop] = useState({
     provider: "LEO overlay disabled",
     warning: "",
@@ -181,14 +210,14 @@ export function OrbitCasePanel() {
           return;
         }
 
-        setFleet(orbitFleet);
+        setFleet([]);
         setSourceMeta({
-          provider: "Bundled snapshot",
+          provider: "Satellite API unavailable",
           isFallback: true,
           warning: error.message,
           updatedAt: null,
-          freshnessLabel: "bundled",
-          cachePolicy: "Static snapshot",
+          freshnessLabel: "unavailable",
+          cachePolicy: "API fetch failed",
         });
       } finally {
         if (!cancelled) {
@@ -282,37 +311,115 @@ export function OrbitCasePanel() {
     };
   }, [sourceMode]);
 
+  const mergedFleet = useMemo(() => {
+    const telemetryByNorad = new Map(telemetry.map((entry) => [entry.norad, entry]));
+    return fleet.map((item) => ({
+      ...item,
+      ...(telemetryByNorad.get(item.norad) ?? {}),
+    }));
+  }, [fleet, telemetry]);
+
   const filteredFleet = useMemo(
     () =>
-      fleet.filter((item) => {
+      mergedFleet.filter((item) => {
         const matchesOrbit = orbitFilter === "all" || item.orbitClass === orbitFilter;
         const matchesMission = missionFilter === "all" || item.missionType === missionFilter;
-        return matchesOrbit && matchesMission;
+        const searchText = searchQuery.trim().toLowerCase();
+        const matchesSearch =
+          !searchText ||
+          [item.name, item.domesticName, item.norad, item.missionLabel, item.orbitLabel]
+            .filter(Boolean)
+            .some((value) => String(value).toLowerCase().includes(searchText));
+
+        return matchesOrbit && matchesMission && matchesSearch;
       }),
-    [fleet, orbitFilter, missionFilter],
-  );
-  const visibleNames = useMemo(
-    () => new Set(filteredFleet.map((item) => item.name)),
-    [filteredFleet],
-  );
-  const renderedFleet = useMemo(
-    () => (telemetry.length > 0 ? telemetry : fleet).filter((entry) => visibleNames.has(entry.name)),
-    [fleet, telemetry, visibleNames],
+    [mergedFleet, missionFilter, orbitFilter, searchQuery],
   );
   const trackedCountLabel =
     filteredFleet.length === fleet.length ? `${filteredFleet.length} sats` : `${filteredFleet.length}/${fleet.length} sats`;
   const visibleLeoPoints = showGlobalLeo ? leoBackdrop.points : [];
+  const globeFleet = useMemo(
+    () => filteredFleet.filter((item) => supportsEarthGlobeTrack(item) && (item.omm || item.tle)),
+    [filteredFleet],
+  );
+  const summary = useMemo(() => {
+    const renderable = mergedFleet.filter((item) => supportsEarthGlobeTrack(item) && (item.omm || item.tle)).length;
+    const unavailable = mergedFleet.length - renderable;
+    const geoCount = mergedFleet.filter((item) => item.orbitClass === "geo").length;
+    const leoCount = mergedFleet.filter((item) => item.orbitClass === "leo").length;
+    const observationCount = mergedFleet.filter((item) => item.missionType === "earth-observation").length;
+    const communicationsCount = mergedFleet.filter((item) => item.missionType === "communications").length;
+
+    return {
+      total: mergedFleet.length,
+      renderable,
+      unavailable,
+      geoCount,
+      leoCount,
+      observationCount,
+      communicationsCount,
+    };
+  }, [mergedFleet]);
+
+  const browserGroups = useMemo(() => {
+    const groups = [
+      {
+        key: "leo",
+        label: "LEO",
+        items: filteredFleet.filter((item) => item.orbitClass === "leo" && supportsEarthGlobeTrack(item) && (item.omm || item.tle)),
+      },
+      {
+        key: "geo",
+        label: "GEO",
+        items: filteredFleet.filter((item) => item.orbitClass === "geo" && supportsEarthGlobeTrack(item) && (item.omm || item.tle)),
+      },
+      {
+        key: "meo",
+        label: "MEO",
+        items: filteredFleet.filter((item) => item.orbitClass === "meo" && supportsEarthGlobeTrack(item) && (item.omm || item.tle)),
+      },
+      {
+        key: "cislunar",
+        label: "Unsupported on Earth globe",
+        items: filteredFleet.filter((item) => !supportsEarthGlobeTrack(item)),
+      },
+      {
+        key: "unavailable",
+        label: "Ephemeris unavailable",
+        items: filteredFleet.filter((item) => supportsEarthGlobeTrack(item) && !item.omm && !item.tle),
+      },
+    ];
+
+    return groups.filter((group) => group.items.length > 0);
+  }, [filteredFleet]);
+
+  useEffect(() => {
+    if (filteredFleet.length === 0) {
+      setSelectedSatelliteNorad(null);
+      return;
+    }
+
+    if (!filteredFleet.some((item) => item.norad === selectedSatelliteNorad)) {
+      setSelectedSatelliteNorad(null);
+    }
+  }, [filteredFleet, selectedSatelliteNorad]);
+
+  const selectedSatellite = useMemo(
+    () => filteredFleet.find((item) => item.norad === selectedSatelliteNorad) ?? null,
+    [filteredFleet, selectedSatelliteNorad],
+  );
 
   return (
     <>
-      <section className="panel-grid panel-grid--hero">
+      <section className="panel-grid panel-grid--hero panel-grid--orbit-hero">
         <Card className="panel panel--visual panel--visual-fullbleed">
           <div className="panel-visual__title">
-            <PanelTitle eyebrow="CESIUM CASE" title="Korea tracks + global LEO points" tag="Path + Point cloud" />
+            <PanelTitle eyebrow="K-Sattie Case" title="Korea tracks + global LEO points" tag="Path + Point cloud" />
           </div>
           <CesiumOrbitDemo
-            fleet={filteredFleet}
+            fleet={globeFleet}
             leoPoints={visibleLeoPoints}
+            onSatelliteSelectionChange={(payload) => setSelectedSatelliteNorad(payload?.norad ?? null)}
             onTelemetryChange={setTelemetry}
             onPointSelectionChange={setSelectedLeoPoint}
           />
@@ -322,16 +429,9 @@ export function OrbitCasePanel() {
           <PanelTitle
             eyebrow="KOREA TRACKING"
             title="Telemetry + overlay status"
-            tag={sourceMode === "live" ? `Cached OMM · ${trackedCountLabel}` : `Snapshot · ${trackedCountLabel}`}
+            tag={sourceMode === "live" ? `Cached OMM · ${trackedCountLabel}` : `내장 스냅샷 · ${trackedCountLabel}`}
           />
           <div className="segment-filter orbit-source-filter">
-            <Button
-              active={sourceMode === "snapshot"}
-              minimal={sourceMode !== "snapshot"}
-              onClick={() => setSourceMode("snapshot")}
-            >
-              하드코딩
-            </Button>
             <Button
               active={sourceMode === "live"}
               minimal={sourceMode !== "live"}
@@ -340,15 +440,22 @@ export function OrbitCasePanel() {
             >
               최신 캐시값
             </Button>
+            <Button
+              active={sourceMode === "snapshot"}
+              minimal={sourceMode !== "snapshot"}
+              onClick={() => setSourceMode("snapshot")}
+            >
+              내장 스냅샷
+            </Button>
           </div>
           <div className="orbit-filter-group">
             <span className="orbit-filter-group__label">표시 범위</span>
             <div className="segment-filter">
               <Button active={!showGlobalLeo} minimal={showGlobalLeo} onClick={() => setShowGlobalLeo(false)}>
-                대한민국 위성만
+                대한민국 위성
               </Button>
               <Button active={showGlobalLeo} minimal={!showGlobalLeo} onClick={() => setShowGlobalLeo(true)}>
-                전체 LEO 포함
+                전체 LEO 위성
               </Button>
             </div>
           </div>
@@ -394,7 +501,7 @@ export function OrbitCasePanel() {
           </div>
           <div className="orbit-source-status">
             <span>{sourceMeta.provider}</span>
-            <span>{sourceMeta.updatedAt ? sourceMeta.updatedAt.slice(0, 19).replace("T", " ") : "local snapshot"}</span>
+            <span>{sourceMeta.updatedAt ? sourceMeta.updatedAt.slice(0, 19).replace("T", " ") : "embedded snapshot"}</span>
           </div>
           <div className="orbit-source-status orbit-source-status--secondary">
             <span>{sourceMeta.cachePolicy}</span>
@@ -405,6 +512,28 @@ export function OrbitCasePanel() {
               {sourceMeta.isFallback ? "Fallback" : "Notice"} · {sourceMeta.warning}
             </div>
           ) : null}
+          <div className="orbit-summary-grid">
+            <div className="orbit-summary-card">
+              <span className="orbit-summary-card__label">Fleet</span>
+              <strong>{summary.total}</strong>
+              <span>{summary.renderable} trackable</span>
+            </div>
+            <div className="orbit-summary-card">
+              <span className="orbit-summary-card__label">Orbit mix</span>
+              <strong>{summary.leoCount}</strong>
+              <span>LEO · {summary.geoCount} GEO</span>
+            </div>
+            <div className="orbit-summary-card">
+              <span className="orbit-summary-card__label">Mission mix</span>
+              <strong>{summary.observationCount}</strong>
+              <span>EO · {summary.communicationsCount} Comms</span>
+            </div>
+            <div className="orbit-summary-card">
+              <span className="orbit-summary-card__label">Warnings</span>
+              <strong>{summary.unavailable}</strong>
+              <span>Ephemeris missing</span>
+            </div>
+          </div>
           <div className="orbit-overlay-summary">
             <div className="orbit-overlay-summary__header">
               <strong>Global LEO point cloud</strong>
@@ -427,35 +556,41 @@ export function OrbitCasePanel() {
             ) : null}
             {leoBackdrop.warning ? <div className="orbit-source-warning">Notice · {leoBackdrop.warning}</div> : null}
           </div>
-          <div className="metric-list">
-            {renderedFleet.length > 0 ? (
-              renderedFleet.map((entry) => (
-                <div key={entry.name} className="metric-row">
-                  <div>
-                    <strong className="orbit-entry-title">
-                      <span>{entry.name}</span>
-                      <OrbitSourceStateTag sourceState={entry.sourceState} />
-                    </strong>
-                    <span>{buildOrbitMetaLine(entry)}</span>
-                    <span>
-                      NORAD {entry.norad} · {entry.sourceDate ?? "snapshot"}
-                    </span>
-                  </div>
-                  <div className="metric-row__value">
-                    <span>{entry.altitude ?? entry.sourceLabel}</span>
-                    <ProgressBar
-                      value={
-                        entry.altitude
-                          ? Math.min(Number.parseInt(entry.altitude, 10) / 1000, 1)
-                          : 0.72
-                      }
-                      intent={Intent.PRIMARY}
-                    />
-                  </div>
+          <div className="orbit-selected-point">
+            <div className="orbit-selected-point__header">
+              <strong>Selected Korean satellite</strong>
+            </div>
+            {selectedSatellite ? (
+              <div className="metric-row metric-row--selected">
+                <div>
+                  <strong className="orbit-entry-title">
+                    <span>{selectedSatellite.englishName ?? selectedSatellite.name}</span>
+                    <OrbitSourceStateTag sourceState={selectedSatellite.sourceState} />
+                  </strong>
+                  <span>{buildOrbitMetaLine(selectedSatellite)}</span>
+                  <span>
+                    NORAD {selectedSatellite.norad} · {selectedSatellite.sourceDate ?? "unavailable"}
+                  </span>
+                  <span>
+                    {selectedSatellite.latitude && selectedSatellite.longitude
+                      ? `${selectedSatellite.latitude} · ${selectedSatellite.longitude}`
+                      : selectedSatellite.sourceLabel}
+                  </span>
                 </div>
-              ))
+                <div className="metric-row__value">
+                  <span>{selectedSatellite.altitude ?? selectedSatellite.sourceLabel}</span>
+                  <ProgressBar
+                    value={
+                      selectedSatellite.altitude
+                        ? Math.min(Number.parseInt(selectedSatellite.altitude, 10) / 1000, 1)
+                        : 0.16
+                    }
+                    intent={Intent.PRIMARY}
+                  />
+                </div>
+              </div>
             ) : (
-              <div className="orbit-empty-state">선택한 필터에 맞는 위성이 없다.</div>
+              <div className="orbit-empty-state">아래 브라우저에서 위성을 선택하면 현재 위치와 상태를 보여준다.</div>
             )}
           </div>
           <div className="orbit-selected-point">
@@ -481,24 +616,79 @@ export function OrbitCasePanel() {
                 </div>
               </div>
             ) : (
-              <div className="orbit-empty-state">지구본 위 점을 클릭하면 선택한 위성의 현재 위치를 보여준다.</div>
+              <div className="orbit-empty-state">지구본 위 점을 클릭하면 선택한 비한국 위성의 현재 위치를 보여준다.</div>
             )}
           </div>
         </Card>
       </section>
 
-      <section className="panel-grid">
+      <section className="panel-grid panel-grid--single">
         <Card className="panel">
-          <PanelTitle eyebrow="WHY THIS CASE" title="CesiumJS fits orbital tracking" tag="3D Globe" />
-          <div className="explain-list">
-            <p>`Entity`, `PathGraphics`, `Timeline`으로 이동 경로와 시간축을 자연스럽게 다룰 수 있다.</p>
-            <p>대한민국 상업위성 7기는 기존처럼 궤적과 라벨을 유지하고, 그 외 LEO 위성은 저부하 점 레이어로만 표시한다.</p>
-            <p>LEO 전체 원본 GP는 서버가 장주기 캐시하고, 현재 위치 점은 10초 스냅샷으로 재계산해 프런트 부하를 줄인다.</p>
-            <p>우측 패널은 한국 위성 중심으로 유지하고, 다른 위성은 지구본 위 점을 클릭했을 때만 현재 위치를 읽도록 설계했다.</p>
-            <p>카메라 패닝, 줌, 서울 기준 홈 이동을 같이 제공해서 분석 흐름을 끊지 않도록 구성했다.</p>
+          <div className="orbit-browser__header">
+            <PanelTitle eyebrow="SATELLITE BROWSER" title="Map-linked Korean satellite list" tag={`${filteredFleet.length} shown`} />
+          </div>
+          <div className="orbit-filter-group">
+            <span className="orbit-filter-group__label">검색</span>
+            <InputGroup
+              value={searchQuery}
+              leftIcon="search"
+              placeholder="이름, NORAD, 임무, 궤도"
+              onChange={(event) => setSearchQuery(event.target.value)}
+            />
+          </div>
+          <div className="orbit-browser">
+            {browserGroups.length > 0 ? (
+              browserGroups.map((group) => (
+                <div key={group.key} className="orbit-group">
+                  <button
+                    type="button"
+                    className="orbit-group__toggle"
+                    onClick={() =>
+                      setExpandedGroups((current) => ({
+                        ...current,
+                        [group.key]: !current[group.key],
+                      }))
+                    }
+                  >
+                    <span>{group.label}</span>
+                    <span>{group.items.length}</span>
+                  </button>
+                  {expandedGroups[group.key] ? (
+                    <div className="orbit-group__list">
+                      {group.items.map((entry) => (
+                        <button
+                          key={entry.norad}
+                          type="button"
+                          className={`orbit-browser__item ${
+                            entry.norad === selectedSatelliteNorad ? "orbit-browser__item--active" : ""
+                          }`}
+                          onClick={() => setSelectedSatelliteNorad(entry.norad)}
+                        >
+                          <div>
+                            <strong className="orbit-entry-title">
+                              <span>{entry.englishName ?? entry.name}</span>
+                              <OrbitSourceStateTag sourceState={entry.sourceState} />
+                            </strong>
+                            <span>{buildOrbitMetaLine(entry)}</span>
+                            <span>NORAD {entry.norad}</span>
+                          </div>
+                          <div className="orbit-browser__item-meta">
+                            <span>{entry.altitude ?? entry.sourceLabel}</span>
+                            <span>{getGroupLabel(entry.orbitClass)}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ))
+            ) : (
+              <div className="orbit-empty-state">선택한 필터에 맞는 위성이 없다.</div>
+            )}
           </div>
         </Card>
       </section>
+
     </>
   );
 }
