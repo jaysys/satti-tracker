@@ -7,7 +7,7 @@ import {
   isoToDateStamp,
   normalizeOmm,
   satelliteCatalogAll,
-  satelliteCatalogCsvRows,
+  satelliteCatalogRows,
   satelliteCatalog,
   snapshotOrbitFleet,
 } from "../shared/satelliteCatalog.js";
@@ -576,7 +576,7 @@ function sortByLaunchDateDescending(a, b) {
 }
 
 export function getSatelliteCatalogSummary() {
-  const rows = satelliteCatalogCsvRows
+  const rows = satelliteCatalogRows
     .map((row) => {
       const norad = String(row.NORAD_CAT_ID);
       const catalogEntry = catalogByNorad.get(norad);

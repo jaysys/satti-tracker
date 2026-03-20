@@ -1,10 +1,12 @@
 import { DatabaseSync } from "node:sqlite";
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const dbPath = path.join(__dirname, "..", "data", "pulse-desk.db");
+const dbPath = path.join(__dirname, "..", "data", "satellite-atlas.db");
+const satelliteSeedCsvPath = path.join(__dirname, "..", "data", "space-track-skor-current-payloads.csv");
 
 const db = new DatabaseSync(dbPath);
 
@@ -20,6 +22,118 @@ db.exec(`
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
 `);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS satellite_payload_catalog (
+    NORAD_CAT_ID TEXT PRIMARY KEY,
+    OBJECT_NAME TEXT NOT NULL,
+    SATNAME TEXT NOT NULL,
+    OBJECT_ID TEXT NOT NULL,
+    COUNTRY TEXT NOT NULL,
+    OBJECT_TYPE TEXT NOT NULL,
+    "CURRENT" TEXT NOT NULL,
+    LAUNCH TEXT NOT NULL,
+    SITE TEXT NOT NULL,
+    PERIOD TEXT,
+    INCLINATION TEXT,
+    APOGEE TEXT,
+    PERIGEE TEXT,
+    RCS_SIZE TEXT,
+    LAUNCH_YEAR TEXT,
+    LAUNCH_NUM TEXT,
+    LAUNCH_PIECE TEXT,
+    FILE TEXT
+  );
+`);
+
+function parseSatelliteCatalogCsv(raw) {
+  const [headerLine, ...lines] = raw.trim().split(/\r?\n/);
+  const headers = headerLine.split(",");
+
+  return lines.map((line) => {
+    const values = line.split(",");
+    return Object.fromEntries(headers.map((header, index) => [header, values[index] ?? ""]));
+  });
+}
+
+function loadSatelliteCatalogSeedRows() {
+  if (!fs.existsSync(satelliteSeedCsvPath)) {
+    throw new Error(`Satellite CSV seed not found: ${satelliteSeedCsvPath}`);
+  }
+
+  return parseSatelliteCatalogCsv(fs.readFileSync(satelliteSeedCsvPath, "utf8"));
+}
+
+function replaceSatelliteCatalog(rows) {
+  const insert = db.prepare(`
+    INSERT INTO satellite_payload_catalog (
+      NORAD_CAT_ID,
+      OBJECT_NAME,
+      SATNAME,
+      OBJECT_ID,
+      COUNTRY,
+      OBJECT_TYPE,
+      "CURRENT",
+      LAUNCH,
+      SITE,
+      PERIOD,
+      INCLINATION,
+      APOGEE,
+      PERIGEE,
+      RCS_SIZE,
+      LAUNCH_YEAR,
+      LAUNCH_NUM,
+      LAUNCH_PIECE,
+      FILE
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  db.exec("BEGIN");
+
+  try {
+    db.prepare("DELETE FROM satellite_payload_catalog").run();
+
+    for (const row of rows) {
+      insert.run(
+        row.NORAD_CAT_ID,
+        row.OBJECT_NAME,
+        row.SATNAME,
+        row.OBJECT_ID,
+        row.COUNTRY,
+        row.OBJECT_TYPE,
+        row.CURRENT,
+        row.LAUNCH,
+        row.SITE,
+        row.PERIOD,
+        row.INCLINATION,
+        row.APOGEE,
+        row.PERIGEE,
+        row.RCS_SIZE,
+        row.LAUNCH_YEAR,
+        row.LAUNCH_NUM,
+        row.LAUNCH_PIECE,
+        row.FILE,
+      );
+    }
+
+    db.exec("COMMIT");
+  } catch (error) {
+    db.exec("ROLLBACK");
+    throw error;
+  }
+}
+
+function seedSatelliteCatalogIfNeeded() {
+  const count = db.prepare("SELECT COUNT(*) AS count FROM satellite_payload_catalog").get().count;
+  if (count > 0) {
+    return;
+  }
+
+  replaceSatelliteCatalog(loadSatelliteCatalogSeedRows());
+}
+
+seedSatelliteCatalogIfNeeded();
 
 const itemCount = db.prepare("SELECT COUNT(*) AS count FROM work_items").get().count;
 
@@ -154,4 +268,44 @@ export function deleteItem(id) {
 
 export function getItemById(id) {
   return db.prepare("SELECT * FROM work_items WHERE id = ?").get(id);
+}
+
+export function listSatelliteCatalogRows() {
+  return db
+    .prepare(`
+      SELECT
+        NORAD_CAT_ID,
+        OBJECT_NAME,
+        SATNAME,
+        OBJECT_ID,
+        COUNTRY,
+        OBJECT_TYPE,
+        "CURRENT" AS CURRENT,
+        LAUNCH,
+        SITE,
+        PERIOD,
+        INCLINATION,
+        APOGEE,
+        PERIGEE,
+        RCS_SIZE,
+        LAUNCH_YEAR,
+        LAUNCH_NUM,
+        LAUNCH_PIECE,
+        FILE
+      FROM satellite_payload_catalog
+      ORDER BY
+        LAUNCH DESC,
+        CAST(NORAD_CAT_ID AS INTEGER) DESC
+    `)
+    .all();
+}
+
+export function reseedSatelliteCatalogFromCsv() {
+  const rows = loadSatelliteCatalogSeedRows();
+  replaceSatelliteCatalog(rows);
+  return {
+    rowCount: rows.length,
+    seedPath: satelliteSeedCsvPath,
+    dbPath,
+  };
 }

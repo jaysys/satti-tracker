@@ -8,7 +8,8 @@
     "dev:client": "vite",
     "dev:server": "node --env-file-if-exists=.env --watch server/index.js",
     "build": "vite build",
-    "start": "NODE_ENV=production node --env-file-if-exists=.env server/index.js"
+    "start": "NODE_ENV=production node --env-file-if-exists=.env server/index.js",
+    "reseed:satellites": "node scripts/reseed-satellite-catalog.mjs"
   },
   "dependencies": {
     "@blueprintjs/core": "^5.16.3",

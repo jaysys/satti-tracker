@@ -1,11 +1,5 @@
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import liveFleetCache from "../data/satellite-live-cache.json" with { type: "json" };
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const CSV_PATH = path.join(__dirname, "..", "data", "space-track-skor-current-payloads.csv");
+import { listSatelliteCatalogRows } from "../server/db.js";
 
 const numericOmmFields = [
   "MEAN_MOTION",
@@ -124,24 +118,6 @@ const decayedNorads = new Set(
     .map((entry) => String(entry.norad)),
 );
 
-function parseCsv(raw) {
-  const [headerLine, ...lines] = raw.trim().split(/\r?\n/);
-  const headers = headerLine.split(",");
-
-  return lines.map((line) => {
-    const values = line.split(",");
-    return Object.fromEntries(headers.map((header, index) => [header, values[index] ?? ""]));
-  });
-}
-
-function loadCatalogRows() {
-  if (!fs.existsSync(CSV_PATH)) {
-    throw new Error(`Satellite CSV not found: ${CSV_PATH}`);
-  }
-
-  return parseCsv(fs.readFileSync(CSV_PATH, "utf8"));
-}
-
 function slugify(value) {
   return String(value)
     .toLowerCase()
@@ -239,10 +215,10 @@ function buildCatalogEntry(row) {
   };
 }
 
-const parsedCatalogRows = loadCatalogRows();
+const parsedCatalogRows = listSatelliteCatalogRows();
 
-export const satelliteCatalogCsvRows = parsedCatalogRows.map((row) => ({ ...row }));
-export const satelliteCatalogAll = satelliteCatalogCsvRows.map(buildCatalogEntry);
+export const satelliteCatalogRows = parsedCatalogRows.map((row) => ({ ...row }));
+export const satelliteCatalogAll = satelliteCatalogRows.map(buildCatalogEntry);
 export const satelliteCatalog = satelliteCatalogAll.filter((entry) => !decayedNorads.has(entry.norad));
 
 const snapshotFleetEntries = Object.values(liveFleetCache.entries ?? {})

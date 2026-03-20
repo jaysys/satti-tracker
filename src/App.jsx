@@ -50,13 +50,7 @@ const tabMeta = [
 ];
 
 export default function App() {
-  const [theme, setTheme] = useState(() => {
-    if (typeof window === "undefined") {
-      return "dark";
-    }
-
-    return window.localStorage.getItem(THEME_STORAGE_KEY) === "light" ? "light" : "dark";
-  });
+  const [theme, setTheme] = useState("dark");
   const [activeTab, setActiveTab] = useState("satellite-orbit");
 
   const currentTab = tabMeta.find((tab) => tab.id === activeTab) ?? tabMeta[0];
