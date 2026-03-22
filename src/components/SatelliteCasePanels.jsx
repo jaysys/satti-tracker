@@ -1,7 +1,9 @@
-import { Button, Card, HTMLTable, InputGroup, Intent, ProgressBar, Tag, Tooltip } from "@blueprintjs/core";
+import { Button, Card, HTMLTable, InputGroup, Intent, PopoverInteractionKind, ProgressBar, Tag, Tooltip } from "@blueprintjs/core";
 import { useEffect, useMemo, useState } from "react";
-import { fetchLeoBackdrop, fetchSatelliteCatalogSummary, fetchSatelliteFleet } from "../api";
+import { fetchAirkoreaDashboard, fetchLeoBackdrop, fetchSatelliteCatalogSummary, fetchSatelliteFleet } from "../api";
 import CesiumOrbitDemo from "./CesiumOrbitDemo";
+import WorldCountriesDemo from "./WorldCountriesDemo";
+import WorldWindRasterDemo from "./WorldWindRasterDemo";
 
 const ORBIT_SOURCE_MODE_STORAGE_KEY = "pulse-desk:orbit-source-mode";
 
@@ -94,14 +96,6 @@ function buildOrbitMetaLine(entry) {
     parts.push(entry.orbitalSlot);
   }
 
-  if (entry.missionLabel) {
-    parts.push(entry.missionLabel);
-  }
-
-  if (entry.operationalStatus) {
-    parts.push(entry.operationalStatus);
-  }
-
   return parts.join(" · ");
 }
 
@@ -116,6 +110,12 @@ function formatPointDegrees(value, axis) {
 
 function formatPointAltitude(value) {
   return Number.isFinite(value) ? `${Math.round(value)} km` : "unknown";
+}
+
+function isStarlinkPoint(point) {
+  return String(point?.name ?? "")
+    .toUpperCase()
+    .includes("STARLINK");
 }
 
 function getGroupLabel(orbitClass) {
@@ -160,6 +160,40 @@ function formatCatalogInclination(inclination) {
 
 function formatCatalogPeriod(periodMinutes) {
   return Number.isFinite(periodMinutes) ? `${periodMinutes.toFixed(2)} min` : "unknown";
+}
+
+function renderWarningContent(summary, details) {
+  if (!summary) {
+    return null;
+  }
+
+  const detailLines = details
+    ? details
+        .split(" / ")
+        .map((line) => line.trim())
+        .filter(Boolean)
+    : [];
+
+  if (!details || details === summary) {
+    return (
+      <div className="orbit-source-tooltip">
+        <strong>{summary}</strong>
+      </div>
+    );
+  }
+
+  return (
+    <div className="orbit-source-tooltip">
+      <strong>{summary}</strong>
+      <div className="orbit-source-tooltip__list">
+        {detailLines.map((line) => (
+          <div className="orbit-source-tooltip__item" key={line}>
+            {line}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function getCatalogTrackIntent(trackKey) {
@@ -211,18 +245,18 @@ export function OrbitCasePanel() {
     return storedMode === "live" ? "live" : "snapshot";
   });
   const [orbitFilter, setOrbitFilter] = useState("all");
-  const [missionFilter, setMissionFilter] = useState("all");
   const [fleet, setFleet] = useState([]);
   const [sourceMeta, setSourceMeta] = useState({
     provider: "내장 스냅샷",
     isFallback: false,
     warning: "",
+    warningDetails: "",
     updatedAt: null,
     freshnessLabel: "embedded",
     cachePolicy: "내장 스냅샷",
   });
   const [loadingFleet, setLoadingFleet] = useState(false);
-  const [showGlobalLeo, setShowGlobalLeo] = useState(true);
+  const [overlayScope, setOverlayScope] = useState("leo");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSatelliteNorad, setSelectedSatelliteNorad] = useState(null);
   const [expandedGroups, setExpandedGroups] = useState({
@@ -263,6 +297,7 @@ export function OrbitCasePanel() {
           provider: payload.provider,
           isFallback: payload.isFallback,
           warning: payload.warning,
+          warningDetails: payload.warningDetails ?? payload.warning,
           updatedAt: payload.updatedAt,
           freshnessLabel: payload.freshnessLabel,
           cachePolicy: payload.cachePolicy,
@@ -272,14 +307,14 @@ export function OrbitCasePanel() {
           return;
         }
 
-        setFleet([]);
         setSourceMeta({
-          provider: "Satellite API unavailable",
+          provider: fleet.length > 0 ? "Using previous cached fleet" : "Satellite API unavailable",
           isFallback: true,
           warning: error.message,
+          warningDetails: error.message,
           updatedAt: null,
           freshnessLabel: "unavailable",
-          cachePolicy: "API fetch failed",
+          cachePolicy: fleet.length > 0 ? "Previous fleet retained" : "API fetch failed",
         });
       } finally {
         if (!cancelled) {
@@ -327,19 +362,13 @@ export function OrbitCasePanel() {
           return;
         }
 
-        setLeoBackdrop({
-          provider: "LEO overlay disabled",
+        setLeoBackdrop((current) => ({
+          ...current,
+          provider: current.points.length > 0 ? current.provider : "LEO overlay disabled",
           warning: error.message,
-          updatedAt: null,
-          generatedAt: null,
-          freshnessLabel: "off",
-          cachePolicy: "Overlay unavailable",
-          totalCount: 0,
-          renderedCount: 0,
-          sourceState: "snapshot",
-          points: [],
-        });
-        setSelectedLeoPoint(null);
+          freshnessLabel: current.points.length > 0 ? current.freshnessLabel : "off",
+          cachePolicy: current.points.length > 0 ? current.cachePolicy : "Overlay unavailable",
+        }));
       }
     }
 
@@ -385,21 +414,31 @@ export function OrbitCasePanel() {
     () =>
       mergedFleet.filter((item) => {
         const matchesOrbit = orbitFilter === "all" || item.orbitClass === orbitFilter;
-        const matchesMission = missionFilter === "all" || item.missionType === missionFilter;
         const searchText = searchQuery.trim().toLowerCase();
         const matchesSearch =
           !searchText ||
-          [item.name, item.domesticName, item.norad, item.missionLabel, item.orbitLabel]
+          [item.name, item.domesticName, item.norad, item.orbitLabel]
             .filter(Boolean)
             .some((value) => String(value).toLowerCase().includes(searchText));
 
-        return matchesOrbit && matchesMission && matchesSearch;
+        return matchesOrbit && matchesSearch;
       }),
-    [mergedFleet, missionFilter, orbitFilter, searchQuery],
+    [mergedFleet, orbitFilter, searchQuery],
   );
   const trackedCountLabel =
     filteredFleet.length === fleet.length ? `${filteredFleet.length} sats` : `${filteredFleet.length}/${fleet.length} sats`;
-  const visibleLeoPoints = showGlobalLeo ? leoBackdrop.points : [];
+  const starlinkLeoPoints = useMemo(() => leoBackdrop.points.filter((point) => isStarlinkPoint(point)), [leoBackdrop.points]);
+  const visibleLeoPoints = useMemo(() => {
+    if (overlayScope === "korea") {
+      return [];
+    }
+
+    if (overlayScope === "starlink") {
+      return starlinkLeoPoints;
+    }
+
+    return leoBackdrop.points;
+  }, [overlayScope, leoBackdrop.points, starlinkLeoPoints]);
   const globeFleet = useMemo(
     () => filteredFleet.filter((item) => supportsEarthGlobeTrack(item) && (item.omm || item.tle)),
     [filteredFleet],
@@ -409,8 +448,6 @@ export function OrbitCasePanel() {
     const unavailable = mergedFleet.length - renderable;
     const geoCount = mergedFleet.filter((item) => item.orbitClass === "geo").length;
     const leoCount = mergedFleet.filter((item) => item.orbitClass === "leo").length;
-    const observationCount = mergedFleet.filter((item) => item.missionType === "earth-observation").length;
-    const communicationsCount = mergedFleet.filter((item) => item.missionType === "communications").length;
 
     return {
       total: mergedFleet.length,
@@ -418,10 +455,19 @@ export function OrbitCasePanel() {
       unavailable,
       geoCount,
       leoCount,
-      observationCount,
-      communicationsCount,
     };
   }, [mergedFleet]);
+
+  useEffect(() => {
+    if (!selectedLeoPoint) {
+      return;
+    }
+
+    const stillVisible = visibleLeoPoints.some((point) => point.norad === selectedLeoPoint.norad);
+    if (!stillVisible) {
+      setSelectedLeoPoint(null);
+    }
+  }, [selectedLeoPoint, visibleLeoPoints]);
 
   const browserGroups = useMemo(() => {
     const groups = [
@@ -513,11 +559,18 @@ export function OrbitCasePanel() {
           <div className="orbit-filter-group">
             <span className="orbit-filter-group__label">표시 범위</span>
             <div className="segment-filter">
-              <Button active={!showGlobalLeo} minimal={showGlobalLeo} onClick={() => setShowGlobalLeo(false)}>
+              <Button active={overlayScope === "korea"} minimal={overlayScope !== "korea"} onClick={() => setOverlayScope("korea")}>
                 대한민국 위성
               </Button>
-              <Button active={showGlobalLeo} minimal={!showGlobalLeo} onClick={() => setShowGlobalLeo(true)}>
+              <Button active={overlayScope === "leo"} minimal={overlayScope !== "leo"} onClick={() => setOverlayScope("leo")}>
                 전체 LEO 위성
+              </Button>
+              <Button
+                active={overlayScope === "starlink"}
+                minimal={overlayScope !== "starlink"}
+                onClick={() => setOverlayScope("starlink")}
+              >
+                스타링크
               </Button>
             </div>
           </div>
@@ -535,32 +588,6 @@ export function OrbitCasePanel() {
               </Button>
             </div>
           </div>
-          <div className="orbit-filter-group">
-            <span className="orbit-filter-group__label">임무</span>
-            <div className="segment-filter">
-              <Button
-                active={missionFilter === "all"}
-                minimal={missionFilter !== "all"}
-                onClick={() => setMissionFilter("all")}
-              >
-                전체
-              </Button>
-              <Button
-                active={missionFilter === "earth-observation"}
-                minimal={missionFilter !== "earth-observation"}
-                onClick={() => setMissionFilter("earth-observation")}
-              >
-                지구관측
-              </Button>
-              <Button
-                active={missionFilter === "communications"}
-                minimal={missionFilter !== "communications"}
-                onClick={() => setMissionFilter("communications")}
-              >
-                통신
-              </Button>
-            </div>
-          </div>
           <div className="orbit-source-status">
             <span>{sourceMeta.provider}</span>
             <span>{sourceMeta.updatedAt ? sourceMeta.updatedAt.slice(0, 19).replace("T", " ") : "embedded snapshot"}</span>
@@ -570,9 +597,17 @@ export function OrbitCasePanel() {
             <span>{sourceMeta.freshnessLabel}</span>
           </div>
           {sourceMeta.warning ? (
-            <div className="orbit-source-warning">
-              {sourceMeta.isFallback ? "Fallback" : "Notice"} · {sourceMeta.warning}
-            </div>
+            <Tooltip
+              content={renderWarningContent(sourceMeta.warning, sourceMeta.warningDetails)}
+              placement="bottom-start"
+              popoverClassName="orbit-source-tooltip-popover"
+              interactionKind={PopoverInteractionKind.HOVER}
+              hoverCloseDelay={180}
+            >
+              <div className="orbit-source-warning">
+                {sourceMeta.isFallback ? "Fallback" : "Notice"} · {sourceMeta.warning}
+              </div>
+            </Tooltip>
           ) : null}
           <div className="orbit-summary-grid">
             <div className="orbit-summary-card">
@@ -584,11 +619,6 @@ export function OrbitCasePanel() {
               <span className="orbit-summary-card__label">Orbit mix</span>
               <strong>{summary.leoCount}</strong>
               <span>LEO · {summary.geoCount} GEO</span>
-            </div>
-            <div className="orbit-summary-card">
-              <span className="orbit-summary-card__label">Mission mix</span>
-              <strong>{summary.observationCount}</strong>
-              <span>EO · {summary.communicationsCount} Comms</span>
             </div>
             <div className="orbit-summary-card">
               <span className="orbit-summary-card__label">Warnings</span>
@@ -613,8 +643,13 @@ export function OrbitCasePanel() {
               <span>{visibleLeoPoints.length.toLocaleString()} points rendered</span>
               <span>{leoBackdrop.totalCount.toLocaleString()} cached payloads</span>
             </div>
-            {!showGlobalLeo ? (
+            {overlayScope === "korea" ? (
               <div className="orbit-source-warning">Notice · 대한민국 위성만 보기 모드라서 전역 LEO 점 레이어를 숨겼다.</div>
+            ) : null}
+            {overlayScope === "starlink" ? (
+              <div className="orbit-source-warning">
+                Notice · 스타링크 점 레이어만 표출 중이다. 대한민국 위성 궤도와 회전 애니메이션은 그대로 유지된다.
+              </div>
             ) : null}
             {leoBackdrop.warning ? <div className="orbit-source-warning">Notice · {leoBackdrop.warning}</div> : null}
           </div>
@@ -694,7 +729,7 @@ export function OrbitCasePanel() {
             <InputGroup
               value={searchQuery}
               leftIcon="search"
-              placeholder="이름, NORAD, 임무, 궤도"
+              placeholder="이름, NORAD, 궤도"
               onChange={(event) => setSearchQuery(event.target.value)}
             />
           </div>
@@ -815,7 +850,6 @@ export function CatalogSummaryPanel() {
           row.norad,
           row.objectId,
           row.orbitLabel,
-          row.missionLabel,
           row.trackLabel,
           row.site,
         ]
@@ -831,7 +865,7 @@ export function CatalogSummaryPanel() {
       englishName: (row) => row.englishName,
       norad: (row) => Number(row.norad),
       orbitLabel: (row) => row.orbitLabel,
-      missionLabel: (row) => row.missionLabel,
+      current: (row) => (row.current ? 1 : 0),
       launchDate: (row) => row.launchDate,
       altitude: (row) => Math.max(row.apogeeKm ?? -Infinity, row.perigeeKm ?? -Infinity),
       inclination: (row) => row.inclination,
@@ -930,7 +964,7 @@ export function CatalogSummaryPanel() {
               <InputGroup
                 value={searchQuery}
                 leftIcon="search"
-                placeholder="위성명, NORAD, OBJECT_ID, 임무, 발사장"
+                placeholder="위성명, NORAD, OBJECT_ID, 발사장"
                 onChange={(event) => setSearchQuery(event.target.value)}
               />
             </div>
@@ -1022,7 +1056,7 @@ export function CatalogSummaryPanel() {
                     <th>{renderSortHeader("위성명", "englishName")}</th>
                     <th>{renderSortHeader("NORAD", "norad")}</th>
                     <th>{renderSortHeader("궤도", "orbitLabel")}</th>
-                    <th>{renderSortHeader("임무", "missionLabel")}</th>
+                    <th>{renderSortHeader("CURRENT", "current")}</th>
                     <th>{renderSortHeader("발사일", "launchDate")}</th>
                     <th>{renderSortHeader("고도", "altitude")}</th>
                     <th>{renderSortHeader("경사각", "inclination")}</th>
@@ -1044,13 +1078,13 @@ export function CatalogSummaryPanel() {
                       <td>
                         <div className="title-cell">
                           <strong>{row.orbitLabel}</strong>
-                          <span>{row.operationalStatus}</span>
+                          <span>{row.objectType ?? "PAYLOAD"}</span>
                         </div>
                       </td>
                       <td>
                         <div className="title-cell">
-                          <strong>{row.missionLabel}</strong>
-                          <span>{row.objectType ?? "PAYLOAD"}</span>
+                          <strong>{row.current ? "Y" : "N"}</strong>
+                          <span>{row.current ? "CURRENT=Y" : "CURRENT=N"}</span>
                         </div>
                       </td>
                       <td className="catalog-table__mono">{row.launchDate ?? "unknown"}</td>
@@ -1080,95 +1114,309 @@ export function CatalogSummaryPanel() {
 }
 
 export function RasterCasePanel() {
+  const [fleet, setFleet] = useState([]);
+  const [airDashboard, setAirDashboard] = useState({
+    provider: "AirKorea unavailable",
+    fetchedAt: null,
+    updatedAt: null,
+    cachePolicy: "",
+    warning: "",
+    summary: {
+      stationCount: 0,
+      pm25Average: null,
+      pm10Average: null,
+      badStationCount: 0,
+    },
+    topPm25Stations: [],
+    bySido: [],
+  });
+  const [loading, setLoading] = useState(true);
+  const [loadingAir, setLoadingAir] = useState(true);
+  const [error, setError] = useState("");
+  const [showSatellites, setShowSatellites] = useState(true);
+  const [showTrueColor, setShowTrueColor] = useState(true);
+  const [showAerosol, setShowAerosol] = useState(true);
+  const [showCoordinates, setShowCoordinates] = useState(true);
+  const [showControls, setShowControls] = useState(true);
+  const [rasterOpacity, setRasterOpacity] = useState(0.6);
+  const [selectedSatelliteNorad, setSelectedSatelliteNorad] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadFleet() {
+      setLoading(true);
+
+      try {
+        const payload = await fetchSatelliteFleet("snapshot");
+        if (cancelled) {
+          return;
+        }
+
+        setFleet(payload.fleet);
+        setError("");
+      } catch (nextError) {
+        if (!cancelled) {
+          setFleet([]);
+          setError(nextError.message);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadFleet();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadAirDashboard() {
+      setLoadingAir(true);
+
+      try {
+        const payload = await fetchAirkoreaDashboard();
+        if (!cancelled) {
+          setAirDashboard(payload);
+        }
+      } catch (nextError) {
+        if (!cancelled) {
+          setAirDashboard((current) => ({
+            ...current,
+            warning: nextError.message,
+          }));
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingAir(false);
+        }
+      }
+    }
+
+    loadAirDashboard();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const renderableFleet = useMemo(
+    () => fleet.filter((item) => item.orbitClass !== "cislunar" && item.norad !== "53365" && (item.omm || item.tle)),
+    [fleet],
+  );
+  const selectedSatellite = useMemo(
+    () => renderableFleet.find((item) => item.norad === selectedSatelliteNorad) ?? null,
+    [renderableFleet, selectedSatelliteNorad],
+  );
+
   return (
     <>
       <section className="panel-grid panel-grid--hero">
-        <Card className="panel panel--visual">
-          <PanelTitle eyebrow="WORLDWIND CASE" title="Raster overlay and atmospheric layer" tag="Layer stack" />
-          <div className="viz-frame">
-            <svg viewBox="0 0 640 360" className="globe-svg globe-svg--raster" role="img" aria-label="Raster overlay sample">
-              <defs>
-                <radialGradient id="rasterEarth" cx="45%" cy="34%" r="68%">
-                  <stop offset="0%" stopColor="#3f6a90" />
-                  <stop offset="48%" stopColor="#183450" />
-                  <stop offset="100%" stopColor="#0a1522" />
-                </radialGradient>
-                <clipPath id="rasterClip">
-                  <circle cx="238" cy="180" r="126" />
-                </clipPath>
-              </defs>
-              <circle cx="238" cy="180" r="126" fill="url(#rasterEarth)" />
-              <g clipPath="url(#rasterClip)">
-                <rect x="118" y="110" width="120" height="74" fill="rgba(234,103,103,0.48)" />
-                <rect x="188" y="166" width="144" height="82" fill="rgba(84,184,137,0.30)" />
-                <circle cx="208" cy="144" r="52" fill="rgba(215,160,85,0.26)" />
-                <circle cx="290" cy="208" r="62" fill="rgba(94,140,198,0.32)" />
-                <path d="M110 150 C180 120, 226 150, 316 122" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="7" />
-                <path d="M126 228 C190 188, 250 220, 336 194" fill="none" stroke="rgba(255,255,255,0.16)" strokeWidth="5" />
-              </g>
-              <circle cx="238" cy="180" r="126" fill="none" stroke="rgba(155,198,255,0.30)" strokeWidth="2" />
-              <rect x="430" y="80" width="148" height="172" fill="rgba(7,17,29,0.78)" stroke="rgba(125,160,201,0.16)" />
-              <text x="450" y="110" fill="#9bc6ff" fontSize="12">ACTIVE LAYERS</text>
-              <text x="450" y="142" fill="#eef4fb" fontSize="14">Cloud density</text>
-              <rect x="450" y="150" width="108" height="8" fill="rgba(94,140,198,0.22)" />
-              <rect x="450" y="150" width="82" height="8" fill="#5e8cc6" />
-              <text x="450" y="182" fill="#eef4fb" fontSize="14">Thermal anomaly</text>
-              <rect x="450" y="190" width="108" height="8" fill="rgba(234,103,103,0.22)" />
-              <rect x="450" y="190" width="52" height="8" fill="#ea6767" />
-              <text x="450" y="222" fill="#eef4fb" fontSize="14">Aerosol plume</text>
-              <rect x="450" y="230" width="108" height="8" fill="rgba(215,160,85,0.22)" />
-              <rect x="450" y="230" width="68" height="8" fill="#d7a055" />
-            </svg>
+        <Card className="panel panel--visual panel--visual-fullbleed">
+          <div className="panel-visual__title">
+            <PanelTitle eyebrow="WORLDWIND CASE" title="NASA GIBS true color + aerosol" tag="NRT WMS" />
           </div>
+          <WorldWindRasterDemo
+            fleet={renderableFleet}
+            selectedNorad={selectedSatelliteNorad}
+            showSatellites={showSatellites}
+            showTrueColor={showTrueColor}
+            showAerosol={showAerosol}
+            showCoordinates={showCoordinates}
+            showControls={showControls}
+            rasterOpacity={rasterOpacity}
+            onSatelliteSelectionChange={(payload) => setSelectedSatelliteNorad(payload?.norad ?? null)}
+          />
         </Card>
 
         <Card className="panel">
-          <PanelTitle eyebrow="LAYER MIX" title="Overlay intensity" tag="Raster cells" />
+          <PanelTitle
+            eyebrow="LAYER MIX"
+            title="Airkorea + WorldWind controls"
+            tag={loadingAir ? "loading" : airDashboard.provider}
+          />
+          <div className="orbit-summary-grid">
+            <div className="orbit-summary-card">
+              <span className="orbit-summary-card__label">PM2.5 avg</span>
+              <strong>{airDashboard.summary.pm25Average ?? "-"}</strong>
+              <span>전국 측정소 평균</span>
+            </div>
+            <div className="orbit-summary-card">
+              <span className="orbit-summary-card__label">PM10 avg</span>
+              <strong>{airDashboard.summary.pm10Average ?? "-"}</strong>
+              <span>전국 측정소 평균</span>
+            </div>
+            <div className="orbit-summary-card">
+              <span className="orbit-summary-card__label">Bad+ stations</span>
+              <strong>{airDashboard.summary.badStationCount ?? 0}</strong>
+              <span>나쁨 이상 측정소</span>
+            </div>
+            <div className="orbit-summary-card">
+              <span className="orbit-summary-card__label">Stations</span>
+              <strong>{airDashboard.summary.stationCount ?? 0}</strong>
+              <span>{airDashboard.updatedAt ?? "대기질 시각 없음"}</span>
+            </div>
+          </div>
           <div className="metric-list">
-            {rasterLayers.map((layer) => (
-              <div key={layer.name} className="metric-row">
+            <div className="metric-row">
+              <div>
+                <strong>NASA GIBS aerosol</strong>
+                <span>한반도 주변 OMPS Aerosol Index NRT 요청 레이어 투명도</span>
+              </div>
+              <div className="metric-row__value">
+                <span>{Math.round(rasterOpacity * 100)}%</span>
+                <ProgressBar value={rasterOpacity} intent={Intent.PRIMARY} />
+              </div>
+            </div>
+          </div>
+          <div className="orbit-filter-group">
+            <span className="orbit-filter-group__label">레이어</span>
+            <div className="segment-filter">
+              <Button
+                active={showTrueColor}
+                minimal={!showTrueColor}
+                onClick={() => setShowTrueColor((current) => !current)}
+              >
+                True color
+              </Button>
+              <Button active={showAerosol} minimal={!showAerosol} onClick={() => setShowAerosol((current) => !current)}>
+                Aerosol
+              </Button>
+              <Button
+                active={showSatellites}
+                minimal={!showSatellites}
+                onClick={() => setShowSatellites((current) => !current)}
+              >
+                Korean satellites
+              </Button>
+              <Button
+                active={showCoordinates}
+                minimal={!showCoordinates}
+                onClick={() => setShowCoordinates((current) => !current)}
+              >
+                Coordinates
+              </Button>
+              <Button active={showControls} minimal={!showControls} onClick={() => setShowControls((current) => !current)}>
+                Nav controls
+              </Button>
+            </div>
+          </div>
+          <div className="orbit-filter-group">
+            <span className="orbit-filter-group__label">Aerosol opacity</span>
+            <input
+              className="worldwind-slider"
+              type="range"
+              min="0.15"
+              max="0.9"
+              step="0.05"
+              value={rasterOpacity}
+              onChange={(event) => setRasterOpacity(Number(event.target.value))}
+            />
+          </div>
+          <div className="orbit-source-status orbit-source-status--secondary">
+            <span>{airDashboard.cachePolicy || "AirKorea cache unavailable"}</span>
+            <span>{airDashboard.fetchedAt ? airDashboard.fetchedAt.slice(0, 19).replace("T", " ") : "No fetch yet"}</span>
+          </div>
+          <div className="orbit-selected-point">
+            <div className="orbit-selected-point__header">
+              <strong>Selected Korean satellite</strong>
+            </div>
+            {selectedSatellite ? (
+              <div className="metric-row metric-row--selected">
                 <div>
-                  <strong>{layer.name}</strong>
-                  <span>WorldWind renderable layer</span>
+                  <strong className="orbit-entry-title">
+                    <span>{selectedSatellite.englishName ?? selectedSatellite.name}</span>
+                    <OrbitSourceStateTag sourceState={selectedSatellite.sourceState} />
+                  </strong>
+                  <span>{buildOrbitMetaLine(selectedSatellite)}</span>
+                  <span>
+                    NORAD {selectedSatellite.norad} · {selectedSatellite.launchDate ?? "Launch unknown"}
+                  </span>
                 </div>
                 <div className="metric-row__value">
-                  <span>{Math.round(layer.value * 100)}%</span>
-                  <ProgressBar value={layer.value} intent={layer.tone} />
+                  <span>{selectedSatellite.sourceLabel}</span>
+                  <ProgressBar value={0.82} intent={Intent.SUCCESS} />
                 </div>
               </div>
-            ))}
+            ) : (
+              <div className="orbit-empty-state">지구본 위 placemark 또는 아래 목록에서 한국 위성을 선택하면 상세를 보여준다.</div>
+            )}
           </div>
+          {error ? <div className="orbit-source-warning">{error}</div> : null}
+          {airDashboard.warning ? <div className="orbit-source-warning">{airDashboard.warning}</div> : null}
         </Card>
       </section>
 
       <section className="panel-grid">
         <Card className="panel">
-          <PanelTitle eyebrow="OBSERVED CELLS" title="Current raster snapshots" tag="3 regions" />
+          <PanelTitle
+            eyebrow="POLLUTION RANK"
+            title="Top PM2.5 monitoring stations"
+            tag={loadingAir ? "loading" : `${airDashboard.topPm25Stations.length} shown`}
+          />
           <div className="data-list">
-            {rasterCells.map((cell) => (
-              <div key={cell.region} className="data-row">
-                <div>
-                  <strong>{cell.region}</strong>
-                  <span>{cell.signal}</span>
+            {airDashboard.topPm25Stations.length > 0 ? (
+              airDashboard.topPm25Stations.map((entry) => (
+                <div key={`${entry.sidoName}-${entry.stationName}`} className="data-row">
+                  <div>
+                    <strong>{entry.stationName}</strong>
+                    <span>
+                      {entry.sidoName} · PM2.5 {entry.pm25Value ?? "-"} · PM10 {entry.pm10Value ?? "-"}
+                    </span>
+                  </div>
+                  <Tag minimal round intent={Intent.DANGER}>
+                    {entry.dataTime ?? "unknown"}
+                  </Tag>
                 </div>
-                <Tag minimal round>
-                  {cell.update}
-                </Tag>
-              </div>
-            ))}
+              ))
+            ) : (
+              <div className="orbit-empty-state">DATA_GO_KR_SERVICE_KEY를 넣으면 AirKorea 실시간 측정소 상위 목록이 표시된다.</div>
+            )}
           </div>
         </Card>
 
         <Card className="panel">
-          <PanelTitle eyebrow="WHY THIS CASE" title="WorldWind fits public raster data" tag="Use case 02" />
-          <div className="explain-list">
-            <p>기상, 대기, 해양처럼 타일 또는 래스터 기반 데이터를 지구본 위에 중첩하는 데 적합하다.</p>
-            <p>`RenderableLayer` 중심 구조라 공공 데이터셋과 분석성 오버레이를 붙이기 쉽다.</p>
-            <p>실서비스에서는 레이어 토글, 투영 전환, 색상 범례를 이 샘플 패널 위에 확장하면 된다.</p>
+          <PanelTitle eyebrow="SIDO RANK" title="Regional PM2.5 averages" tag={`${airDashboard.bySido.length} regions`} />
+          <div className="data-list">
+            {airDashboard.bySido.length > 0 ? (
+              airDashboard.bySido.slice(0, 10).map((entry) => (
+                <div key={entry.sidoName} className="data-row">
+                  <div>
+                    <strong>{entry.sidoName}</strong>
+                    <span>{entry.stationCount} stations</span>
+                  </div>
+                  <div className="list-row__meta">
+                    <strong>PM2.5 {entry.pm25Average ?? "-"}</strong>
+                    <span>PM10 {entry.pm10Average ?? "-"}</span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="orbit-empty-state">서비스키를 넣으면 시도별 평균 대기질이 표시된다.</div>
+            )}
           </div>
         </Card>
       </section>
     </>
+  );
+}
+
+export function CountriesCasePanel() {
+  return (
+    <section className="panel-grid panel-grid--single">
+      <Card className="panel panel--visual panel--visual-fullbleed">
+        <div className="panel-visual__title">
+          <PanelTitle eyebrow="2D TRACK MAP" title="한국 위성 트래킹" tag="Canvas + TopoJSON" />
+        </div>
+        <WorldCountriesDemo />
+      </Card>
+    </section>
   );
 }
 

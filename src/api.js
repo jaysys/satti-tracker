@@ -32,3 +32,7 @@ export function fetchLeoBackdrop(mode = "snapshot") {
 export function fetchSatelliteCatalogSummary() {
   return request("/api/satellites/catalog-summary");
 }
+
+export function fetchAirkoreaDashboard() {
+  return request("/api/airkorea/dashboard");
+}

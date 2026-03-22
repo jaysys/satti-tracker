@@ -25,6 +25,7 @@ const CACHE_TTL_BY_ORBIT_MS = {
   leo: 30 * 60 * 1000,
   geo: 12 * 60 * 60 * 1000,
 };
+const SPACE_TRACK_FAILURE_COOLDOWN_MS = 15 * 60 * 1000;
 const LEO_GP_REFRESH_MS = 60 * 60 * 1000;
 const LEO_POINT_SNAPSHOT_MS = 10 * 1000;
 const LEO_MEAN_MOTION_MIN = 11.25;
@@ -44,6 +45,9 @@ let leoPointSnapshot = {
   sourceState: "snapshot",
 };
 let spaceTrackSessionPromise = null;
+let spaceTrackSessionCookieHeader = "";
+let spaceTrackLastFailureAt = 0;
+let spaceTrackLastFailureMessage = "";
 
 function loadPersistedFleetCache() {
   try {
@@ -200,12 +204,60 @@ function readCookies(response) {
   }
 
   const singleCookie = response.headers.get("set-cookie");
-  return singleCookie ? singleCookie.split(";", 1)[0] : "";
+  if (!singleCookie) {
+    return "";
+  }
+
+  return singleCookie
+    .split(/,(?=\s*[^;,=\s]+=[^;,]+)/)
+    .map((value) => value.trim().split(";", 1)[0])
+    .filter(Boolean)
+    .join("; ");
 }
 
-async function createSpaceTrackSession() {
+function clearSpaceTrackSession() {
+  spaceTrackSessionCookieHeader = "";
+  spaceTrackSessionPromise = null;
+}
+
+function recordSpaceTrackFailure(error) {
+  spaceTrackLastFailureAt = Date.now();
+  spaceTrackLastFailureMessage = String(error?.message ?? error ?? "Space-Track request failed");
+}
+
+function clearSpaceTrackFailure() {
+  spaceTrackLastFailureAt = 0;
+  spaceTrackLastFailureMessage = "";
+}
+
+function getRecentSpaceTrackFailure() {
+  if (!spaceTrackLastFailureAt || !spaceTrackLastFailureMessage) {
+    return "";
+  }
+
+  if (Date.now() - spaceTrackLastFailureAt > SPACE_TRACK_FAILURE_COOLDOWN_MS) {
+    clearSpaceTrackFailure();
+    return "";
+  }
+
+  return spaceTrackLastFailureMessage;
+}
+
+function hasUsableFleetCache() {
+  return satelliteCatalog.some((entry) => liveCache.has(entry.id));
+}
+
+async function createSpaceTrackSession(forceRefresh = false) {
   if (!SPACE_TRACK_IDENTITY || !SPACE_TRACK_PASSWORD) {
     throw new Error("SPACE_TRACK_IDENTITY 또는 SPACE_TRACK_PASSWORD가 비어 있습니다.");
+  }
+
+  if (forceRefresh) {
+    clearSpaceTrackSession();
+  }
+
+  if (spaceTrackSessionCookieHeader) {
+    return spaceTrackSessionCookieHeader;
   }
 
   if (spaceTrackSessionPromise) {
@@ -234,6 +286,7 @@ async function createSpaceTrackSession() {
         throw new Error("Space-Track session cookie was not returned.");
       }
 
+      spaceTrackSessionCookieHeader = cookieHeader;
       return cookieHeader;
     })
     .finally(() => {
@@ -244,26 +297,44 @@ async function createSpaceTrackSession() {
 }
 
 async function fetchSpaceTrackJson(pathname) {
-  const cookieHeader = await createSpaceTrackSession();
-  const response = await fetch(`https://www.space-track.org${pathname}`, {
-    headers: {
-      Accept: "application/json",
-      Cookie: cookieHeader,
-      "User-Agent": "PulseDesk/0.1 satellite-tracker",
-    },
-    signal: AbortSignal.timeout(LIVE_TIMEOUT_MS),
-  });
+  async function executeQuery(forceRefresh = false) {
+    const cookieHeader = await createSpaceTrackSession(forceRefresh);
+    const response = await fetch(`https://www.space-track.org${pathname}`, {
+      headers: {
+        Accept: "application/json",
+        Cookie: cookieHeader,
+        "User-Agent": "PulseDesk/0.1 satellite-tracker",
+      },
+      signal: AbortSignal.timeout(LIVE_TIMEOUT_MS),
+    });
 
-  if (!response.ok) {
-    throw new Error(`Space-Track query failed with ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`Space-Track query failed with ${response.status}`);
+    }
+
+    const payload = await response.json();
+    if (!Array.isArray(payload)) {
+      throw new Error("Space-Track payload is not an array.");
+    }
+
+    return payload;
   }
 
-  const payload = await response.json();
-  if (!Array.isArray(payload)) {
-    throw new Error("Space-Track payload is not an array.");
-  }
+  try {
+    return await executeQuery();
+  } catch (error) {
+    const statusMatch = String(error?.message ?? "").match(/Space-Track query failed with (\d+)/);
+    if (!statusMatch || statusMatch[1] !== "401") {
+      throw error;
+    }
 
-  return payload;
+    clearSpaceTrackSession();
+    try {
+      return await executeQuery(true);
+    } catch (retryError) {
+      throw retryError;
+    }
+  }
 }
 
 async function fetchSpaceTrackFleet() {
@@ -294,16 +365,30 @@ async function fetchSpaceTrackFleet() {
   }
 
   persistFleetCache();
+  clearSpaceTrackFailure();
 }
 
 async function refreshSpaceTrackFleet() {
+  const recentFailure = getRecentSpaceTrackFailure();
+  if (recentFailure && hasUsableFleetCache()) {
+    throw new Error(recentFailure);
+  }
+
   try {
     await fetchSpaceTrackFleet();
   } catch (error) {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    await fetchSpaceTrackFleet().catch(() => {
+    recordSpaceTrackFailure(error);
+    if (String(error?.message ?? "").includes("429")) {
       throw error;
-    });
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      await fetchSpaceTrackFleet();
+    } catch (retryError) {
+      recordSpaceTrackFailure(retryError);
+      throw retryError;
+    }
   }
 }
 
@@ -364,6 +449,13 @@ function buildLiveMeta(resolvedEntries) {
     .filter(Boolean)
     .sort()
     .reverse();
+  const stateSet = new Set(resolvedEntries.map((entry) => entry.state));
+  const stateCounts = {
+    freshCache: resolvedEntries.filter((entry) => entry.state === "fresh-cache").length,
+    staleCache: resolvedEntries.filter((entry) => entry.state === "stale-cache").length,
+    snapshotFallback: resolvedEntries.filter((entry) => entry.state === "snapshot-fallback").length,
+    missing: resolvedEntries.filter((entry) => entry.state === "missing").length,
+  };
 
   const usesFallback = resolvedEntries.some(
     (entry) => entry.state === "stale-cache" || entry.state === "snapshot-fallback" || entry.state === "missing",
@@ -371,14 +463,73 @@ function buildLiveMeta(resolvedEntries) {
   const warnings = resolvedEntries
     .map((entry) => entry.warning)
     .filter(Boolean);
+  const allFreshCache = stateSet.size === 1 && stateSet.has("fresh-cache");
+  const allSnapshotOnly = !updatedAtValues[0] && [...stateSet].every((state) => state === "snapshot-fallback" || state === "missing");
+  const hasStale = stateSet.has("stale-cache");
+  const hasSnapshot = stateSet.has("snapshot-fallback") || stateSet.has("missing");
+
+  let provider = "Space-Track cached GP";
+  let freshnessLabel = updatedAtValues[0] ? formatAge(updatedAtValues[0]) : "snapshot only";
+
+  if (allFreshCache) {
+    provider = "Space-Track cached GP";
+    freshnessLabel = updatedAtValues[0] ? `cached · ${formatAge(updatedAtValues[0])}` : "cached";
+  } else if (allSnapshotOnly) {
+    provider = "Bundled snapshot fallback";
+    freshnessLabel = "snapshot only";
+  } else if (hasStale && !hasSnapshot) {
+    provider = "Stale cached GP";
+    freshnessLabel = updatedAtValues[0] ? `stale · ${formatAge(updatedAtValues[0])}` : "stale";
+  } else if (hasStale || hasSnapshot) {
+    provider = "Mixed cache state";
+    freshnessLabel = updatedAtValues[0] ? `mixed · ${formatAge(updatedAtValues[0])}` : "mixed";
+  }
 
   return {
+    provider,
     updatedAt: updatedAtValues[0] ?? null,
-    freshnessLabel: updatedAtValues[0] ? formatAge(updatedAtValues[0]) : "snapshot only",
+    freshnessLabel,
     isFallback: usesFallback,
+    stateCounts,
     warning: warnings.length > 0 ? warnings.join(" / ") : "",
     cachePolicy: "Korea: LEO 30m · GEO 12h",
   };
+}
+
+function summarizeFetchError(errorMessage) {
+  if (!errorMessage) {
+    return "";
+  }
+
+  const statusMatch = String(errorMessage).match(/Space-Track query failed with (\d+)/);
+  if (statusMatch) {
+    return `Space-Track ${statusMatch[1]}`;
+  }
+
+  return String(errorMessage);
+}
+
+function buildFleetWarningSummary(fetchError, meta) {
+  const parts = [];
+  const fetchSummary = summarizeFetchError(fetchError);
+
+  if (fetchSummary) {
+    parts.push(fetchSummary);
+  }
+
+  if (meta.stateCounts.staleCache > 0) {
+    parts.push(`stale ${meta.stateCounts.staleCache}`);
+  }
+
+  if (meta.stateCounts.snapshotFallback > 0) {
+    parts.push(`snapshot ${meta.stateCounts.snapshotFallback}`);
+  }
+
+  if (meta.stateCounts.missing > 0) {
+    parts.push(`missing ${meta.stateCounts.missing}`);
+  }
+
+  return parts.join(" · ");
 }
 
 function normalizeLeoRecord(entry) {
@@ -444,13 +595,26 @@ async function fetchLeoPopulationFromSpaceTrack() {
 }
 
 async function refreshLeoPopulation() {
+  const recentFailure = getRecentSpaceTrackFailure();
+  if (recentFailure && leoPopulationCache.records.length > 0) {
+    throw new Error(recentFailure);
+  }
+
   try {
     await fetchLeoPopulationFromSpaceTrack();
   } catch (error) {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    await fetchLeoPopulationFromSpaceTrack().catch(() => {
+    recordSpaceTrackFailure(error);
+    if (String(error?.message ?? "").includes("429")) {
       throw error;
-    });
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      await fetchLeoPopulationFromSpaceTrack();
+    } catch (retryError) {
+      recordSpaceTrackFailure(retryError);
+      throw retryError;
+    }
   }
 }
 
@@ -598,9 +762,6 @@ export function getSatelliteCatalogSummary() {
         objectType: row.OBJECT_TYPE || null,
         orbitClass: catalogEntry.orbitClass,
         orbitLabel: catalogEntry.orbitLabel,
-        missionType: catalogEntry.missionType,
-        missionLabel: catalogEntry.missionLabel,
-        operationalStatus: catalogEntry.operationalStatus,
         inclination: toNumber(row.INCLINATION),
         periodMinutes: toNumber(row.PERIOD),
         apogeeKm: toNumber(row.APOGEE),
@@ -620,12 +781,6 @@ export function getSatelliteCatalogSummary() {
     meo: rows.filter((row) => row.orbitClass === "meo").length,
     cislunar: rows.filter((row) => row.orbitClass === "cislunar").length,
   };
-  const missionCounts = {
-    earthObservation: rows.filter((row) => row.missionType === "earth-observation").length,
-    communications: rows.filter((row) => row.missionType === "communications").length,
-    technology: rows.filter((row) => row.missionType === "technology").length,
-    science: rows.filter((row) => row.missionType === "science").length,
-  };
   const launchDates = rows.map((row) => row.launchDate).filter(Boolean).sort();
 
   return {
@@ -638,7 +793,6 @@ export function getSatelliteCatalogSummary() {
       nonEarth: rows.filter((row) => row.trackKey === "non-earth").length,
       decayed: rows.filter((row) => row.trackKey === "decayed").length,
       orbitCounts,
-      missionCounts,
       launchSpan: {
         first: launchDates[0] ?? null,
         last: launchDates[launchDates.length - 1] ?? null,
@@ -679,9 +833,10 @@ export async function getSatelliteFleet(mode = "snapshot") {
 
   return {
     mode: "live",
-    provider: "Space-Track cached GP",
+    provider: meta.provider,
     isFallback: meta.isFallback,
-    warning: fetchError ? `${fetchError} / ${meta.warning}` : meta.warning,
+    warning: buildFleetWarningSummary(fetchError, meta),
+    warningDetails: fetchError ? `${fetchError} / ${meta.warning}` : meta.warning,
     updatedAt: meta.updatedAt,
     freshnessLabel: meta.freshnessLabel,
     cachePolicy: meta.cachePolicy,

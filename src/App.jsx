@@ -3,6 +3,7 @@ import { Button, Callout, Card, H1, Icon } from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
 import {
   CatalogSummaryPanel,
+  CountriesCasePanel,
   NetworkCasePanel,
   OrbitCasePanel,
   RasterCasePanel,
@@ -30,6 +31,15 @@ const tabMeta = [
     icon: IconNames.TH,
   },
   {
+    id: "country-borders",
+    label: "Korean Satellite Tracking",
+    eyebrow: "2D TRACK MAP",
+    title: "한국 위성 트래킹",
+    description: "세계 국가 경계 지도 위에서 대한민국 위성 위치와 지상궤적을 확인하는 2D 트래킹 화면이다.",
+    count: 241,
+    icon: IconNames.GLOBE,
+  },
+  {
     id: "satellite-raster",
     label: "Raster Layer",
     eyebrow: "WORLDWIND CASE",
@@ -50,7 +60,13 @@ const tabMeta = [
 ];
 
 export default function App() {
-  const [theme, setTheme] = useState("dark");
+  const [theme, setTheme] = useState(() => {
+    if (typeof window === "undefined") {
+      return "dark";
+    }
+
+    return window.localStorage.getItem(THEME_STORAGE_KEY) === "light" ? "light" : "dark";
+  });
   const [activeTab, setActiveTab] = useState("satellite-orbit");
 
   const currentTab = tabMeta.find((tab) => tab.id === activeTab) ?? tabMeta[0];
@@ -86,6 +102,10 @@ export default function App() {
 
     if (activeTab === "satellite-catalog") {
       return <CatalogSummaryPanel />;
+    }
+
+    if (activeTab === "country-borders") {
+      return <CountriesCasePanel />;
     }
 
     return <NetworkCasePanel />;
@@ -134,11 +154,11 @@ export default function App() {
           </div>
           <div className="sidebar-card__row">
             <span>Visible tabs</span>
-            <strong>4</strong>
+            <strong>5</strong>
           </div>
           <div className="sidebar-card__row">
             <span>Stack</span>
-            <strong>Cesium · WWD · deck.gl</strong>
+            <strong>Cesium · WWD · Canvas</strong>
           </div>
         </Card>
       </aside>
@@ -154,8 +174,8 @@ export default function App() {
         </header>
 
         <Callout className="case-callout" intent="primary" title="Satellite visualization cases">
-          `Orbit Track`, `Satellite Table`, `Raster Layer`, `Signal Mesh` 4개 케이스만 남기고 나머지 운영
-          대시보드 기능과 화면은 제거했다.
+          `Orbit Track`, `Satellite Table`, `Raster Layer`, `Korean Satellite Tracking`, `Signal Mesh` 5개 케이스만 남기고
+          나머지 운영 대시보드 기능과 화면은 제거했다.
         </Callout>
 
         <section className="stage-content">{renderContent()}</section>

@@ -1,8 +1,8 @@
 {
-  "updatedAt": "2026-03-20T15:11:21.114Z",
+  "updatedAt": "2026-03-20T16:26:01.420Z",
   "entries": {
     "spaceeye-t": {
-      "fetchedAt": "2026-03-20T15:11:21.114Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "spaceeye-t",
         "name": "SpaceEye-T",
@@ -64,7 +64,7 @@
       }
     },
     "kompsat-2": {
-      "fetchedAt": "2026-03-20T15:11:21.113Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "kompsat-2",
         "name": "KOMPSAT 2",
@@ -126,7 +126,7 @@
       }
     },
     "kompsat-3": {
-      "fetchedAt": "2026-03-20T15:11:21.113Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "kompsat-3",
         "name": "KOMPSAT 3",
@@ -188,7 +188,7 @@
       }
     },
     "kompsat-3a": {
-      "fetchedAt": "2026-03-20T15:11:21.113Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "kompsat-3a",
         "name": "KOMPSAT 3A",
@@ -250,7 +250,7 @@
       }
     },
     "kompsat-5": {
-      "fetchedAt": "2026-03-20T15:11:21.113Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "kompsat-5",
         "name": "KOMPSAT 5",
@@ -312,7 +312,7 @@
       }
     },
     "koreasat-5a": {
-      "fetchedAt": "2026-03-20T15:11:21.114Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "koreasat-5a",
         "name": "KOREASAT 5A",
@@ -375,7 +375,7 @@
       }
     },
     "koreasat-6a": {
-      "fetchedAt": "2026-03-20T15:11:21.114Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "koreasat-6a",
         "name": "KOREASAT 6A",
@@ -438,7 +438,7 @@
       }
     },
     "oscar-23-kitsat-1-22077": {
-      "fetchedAt": "2026-03-20T15:11:21.113Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "oscar-23-kitsat-1-22077",
         "name": "OSCAR 23 (KITSAT 1)",
@@ -500,7 +500,7 @@
       }
     },
     "kitsat-b-22828": {
-      "fetchedAt": "2026-03-20T15:11:21.113Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "kitsat-b-22828",
         "name": "KITSAT B",
@@ -562,7 +562,7 @@
       }
     },
     "koreasat-1-23639": {
-      "fetchedAt": "2026-03-20T15:11:21.113Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "koreasat-1-23639",
         "name": "KOREASAT 1",
@@ -624,7 +624,7 @@
       }
     },
     "abs-1a-koreasat-2-23768": {
-      "fetchedAt": "2026-03-20T15:11:21.113Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "abs-1a-koreasat-2-23768",
         "name": "ABS 1A (KOREASAT 2)",
@@ -872,7 +872,7 @@
       }
     },
     "kitsat-3-25756": {
-      "fetchedAt": "2026-03-20T15:11:21.113Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "kitsat-3-25756",
         "name": "KITSAT 3",
@@ -934,7 +934,7 @@
       }
     },
     "abs-7-koreasat-3-25894": {
-      "fetchedAt": "2026-03-20T15:11:21.113Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "abs-7-koreasat-3-25894",
         "name": "ABS 7 (KOREASAT 3)",
@@ -996,7 +996,7 @@
       }
     },
     "kompsat-26032": {
-      "fetchedAt": "2026-03-20T15:11:21.113Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "kompsat-26032",
         "name": "KOMPSAT",
@@ -1058,7 +1058,7 @@
       }
     },
     "kaistsat-4-27945": {
-      "fetchedAt": "2026-03-20T15:11:21.113Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "kaistsat-4-27945",
         "name": "KAISTSAT 4",
@@ -1120,7 +1120,7 @@
       }
     },
     "koreasat-5-29349": {
-      "fetchedAt": "2026-03-20T15:11:21.113Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "koreasat-5-29349",
         "name": "KOREASAT 5",
@@ -1182,7 +1182,7 @@
       }
     },
     "coms-1-36744": {
-      "fetchedAt": "2026-03-20T15:11:21.113Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "coms-1-36744",
         "name": "COMS 1",
@@ -1244,7 +1244,7 @@
       }
     },
     "koreasat-6-37265": {
-      "fetchedAt": "2026-03-20T15:11:21.113Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "koreasat-6-37265",
         "name": "KOREASAT 6",
@@ -1430,7 +1430,7 @@
       }
     },
     "stsat-3-39422": {
-      "fetchedAt": "2026-03-20T15:11:21.113Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "stsat-3-39422",
         "name": "STSAT 3",
@@ -1492,7 +1492,7 @@
       }
     },
     "koreasat-7-42691": {
-      "fetchedAt": "2026-03-20T15:11:21.113Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "koreasat-7-42691",
         "name": "KOREASAT 7",
@@ -1616,7 +1616,7 @@
       }
     },
     "nextsat-1-43811": {
-      "fetchedAt": "2026-03-20T15:11:21.114Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "nextsat-1-43811",
         "name": "NEXTSAT-1",
@@ -1678,7 +1678,7 @@
       }
     },
     "snuglite-43784": {
-      "fetchedAt": "2026-03-20T15:11:21.114Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "snuglite-43784",
         "name": "SNUGLITE",
@@ -1740,7 +1740,7 @@
       }
     },
     "snusat-2-43782": {
-      "fetchedAt": "2026-03-20T15:11:21.114Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "snusat-2-43782",
         "name": "SNUSAT-2",
@@ -1802,7 +1802,7 @@
       }
     },
     "geo-kompsat-2a-43823": {
-      "fetchedAt": "2026-03-20T15:11:21.114Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "geo-kompsat-2a-43823",
         "name": "GEO-KOMPSAT-2A",
@@ -1864,7 +1864,7 @@
       }
     },
     "geo-kompsat-2b-45246": {
-      "fetchedAt": "2026-03-20T15:11:21.114Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "geo-kompsat-2b-45246",
         "name": "GEO-KOMPSAT-2B",
@@ -1926,7 +1926,7 @@
       }
     },
     "koreasat-116-45920": {
-      "fetchedAt": "2026-03-20T15:11:21.114Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "koreasat-116-45920",
         "name": "KOREASAT 116",
@@ -1988,7 +1988,7 @@
       }
     },
     "cas500-1-47932": {
-      "fetchedAt": "2026-03-20T15:11:21.114Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "cas500-1-47932",
         "name": "CAS500-1",
@@ -2050,7 +2050,7 @@
       }
     },
     "step-cube-lab-ii-52897": {
-      "fetchedAt": "2026-03-20T15:11:21.114Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "step-cube-lab-ii-52897",
         "name": "STEP CUBE LAB-II",
@@ -2112,7 +2112,7 @@
       }
     },
     "pvsat-52894": {
-      "fetchedAt": "2026-03-20T15:11:21.114Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "pvsat-52894",
         "name": "PVSAT",
@@ -2174,7 +2174,7 @@
       }
     },
     "kslv-ii-dummy-52895": {
-      "fetchedAt": "2026-03-20T15:11:21.114Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "kslv-ii-dummy-52895",
         "name": "KSLV-II DUMMY",
@@ -2236,7 +2236,7 @@
       }
     },
     "randev-52898": {
-      "fetchedAt": "2026-03-20T15:11:21.114Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "randev-52898",
         "name": "RANDEV",
@@ -2298,7 +2298,7 @@
       }
     },
     "dummy-cubesat-52983": {
-      "fetchedAt": "2026-03-20T15:11:21.114Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "dummy-cubesat-52983",
         "name": "DUMMY CUBESAT",
@@ -2360,7 +2360,7 @@
       }
     },
     "miman-52900": {
-      "fetchedAt": "2026-03-20T15:11:21.114Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "miman-52900",
         "name": "MIMAN",
@@ -2422,7 +2422,7 @@
       }
     },
     "snuglite-ii-52899": {
-      "fetchedAt": "2026-03-20T15:11:21.114Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "snuglite-ii-52899",
         "name": "SNUGLITE-II",
@@ -2484,7 +2484,7 @@
       }
     },
     "kplo-53365": {
-      "fetchedAt": "2026-03-20T15:11:21.114Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "kplo-53365",
         "name": "KPLO",
@@ -2546,7 +2546,7 @@
       }
     },
     "nextsat-2-56743": {
-      "fetchedAt": "2026-03-20T15:11:21.114Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "nextsat-2-56743",
         "name": "NEXTSAT-2",
@@ -2608,7 +2608,7 @@
       }
     },
     "observer-1a-58323": {
-      "fetchedAt": "2026-03-20T15:11:21.114Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "observer-1a-58323",
         "name": "OBSERVER-1A",
@@ -2670,7 +2670,7 @@
       }
     },
     "korsat-7-58463": {
-      "fetchedAt": "2026-03-20T15:11:21.114Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "korsat-7-58463",
         "name": "KORSAT 7",
@@ -2732,7 +2732,7 @@
       }
     },
     "doory-sat-58500": {
-      "fetchedAt": "2026-03-20T15:11:21.114Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "doory-sat-58500",
         "name": "DOORY-SAT",
@@ -2794,7 +2794,7 @@
       }
     },
     "contecsat-1-59117": {
-      "fetchedAt": "2026-03-20T15:11:21.114Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "contecsat-1-59117",
         "name": "CONTECSAT-1",
@@ -2856,7 +2856,7 @@
       }
     },
     "korsat-1-59452": {
-      "fetchedAt": "2026-03-20T15:11:21.114Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "korsat-1-59452",
         "name": "KORSAT-1",
@@ -2918,7 +2918,7 @@
       }
     },
     "neonsat-1-59587": {
-      "fetchedAt": "2026-03-20T15:11:21.114Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "neonsat-1-59587",
         "name": "NEONSAT-1",
@@ -2980,7 +2980,7 @@
       }
     },
     "korsat-2-62377": {
-      "fetchedAt": "2026-03-20T15:11:21.114Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "korsat-2-62377",
         "name": "KORSAT-2",
@@ -3042,7 +3042,7 @@
       }
     },
     "jinjusat-1b-63210": {
-      "fetchedAt": "2026-03-20T15:11:21.114Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "jinjusat-1b-63210",
         "name": "JINJUSAT-1B",
@@ -3104,7 +3104,7 @@
       }
     },
     "korsat-3-63630": {
-      "fetchedAt": "2026-03-20T15:11:21.114Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "korsat-3-63630",
         "name": "KORSAT-3",
@@ -3166,7 +3166,7 @@
       }
     },
     "cas500-3-66655": {
-      "fetchedAt": "2026-03-20T15:11:21.114Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "cas500-3-66655",
         "name": "CAS500-3",
@@ -3228,7 +3228,7 @@
       }
     },
     "gyeonggisat-1-66771": {
-      "fetchedAt": "2026-03-20T15:11:21.114Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "gyeonggisat-1-66771",
         "name": "GYEONGGISAT-1",
@@ -3290,7 +3290,7 @@
       }
     },
     "neonsat-1a-67614": {
-      "fetchedAt": "2026-03-20T15:11:21.114Z",
+      "fetchedAt": "2026-03-20T16:26:01.420Z",
       "fleetEntry": {
         "id": "neonsat-1a-67614",
         "name": "NEONSAT-1A",

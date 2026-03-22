@@ -9,6 +9,7 @@ import {
   listItems,
   updateItem,
 } from "./db.js";
+import { getAirkoreaDashboard } from "./airkorea.js";
 import { getLeoBackdrop, getSatelliteCatalogSummary, getSatelliteFleet } from "./satellites.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -76,6 +77,11 @@ app.get("/api/satellites/leo-backdrop", async (req, res) => {
 
 app.get("/api/satellites/catalog-summary", (_req, res) => {
   res.json(getSatelliteCatalogSummary());
+});
+
+app.get("/api/airkorea/dashboard", async (_req, res) => {
+  const payload = await getAirkoreaDashboard();
+  res.json(payload);
 });
 
 app.post("/api/items", (req, res) => {

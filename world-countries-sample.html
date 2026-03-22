@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>World Countries Sample</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg-top: #efe9df;
+        --bg-bottom: #d9e7f2;
+        --panel: rgba(255, 255, 255, 0.84);
+        --text-main: #17212b;
+        --text-muted: #52616d;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+        color: var(--text-main);
+        background:
+          radial-gradient(circle at top left, rgba(255, 255, 255, 0.9), transparent 30%),
+          linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+      }
+
+      main {
+        width: min(1180px, calc(100vw - 32px));
+        margin: 32px auto;
+        padding: 28px;
+        border: 1px solid rgba(23, 50, 39, 0.08);
+        border-radius: 24px;
+        background: var(--panel);
+        backdrop-filter: blur(16px);
+        box-shadow: 0 18px 60px rgba(23, 33, 43, 0.12);
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: clamp(2rem, 4vw, 3.7rem);
+        line-height: 0.95;
+        letter-spacing: -0.04em;
+      }
+
+      p {
+        margin: 0;
+      }
+
+      .intro {
+        max-width: 860px;
+        color: var(--text-muted);
+        line-height: 1.6;
+      }
+
+      .controls,
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 14px;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+      }
+
+      .controls label,
+      .meta span {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.54);
+      }
+
+      .controls label {
+        cursor: pointer;
+      }
+
+      .controls button {
+        border: 0;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.54);
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      select {
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+      }
+
+      .map-shell {
+        margin-top: 24px;
+        padding: 16px;
+        border-radius: 20px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.1)),
+          linear-gradient(180deg, #b8d9ec 0%, #92c5df 48%, #7daec5 100%);
+      }
+
+      canvas {
+        display: block;
+        width: 100%;
+        height: auto;
+        aspect-ratio: 2 / 1;
+        border-radius: 14px;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+      }
+
+      .legend {
+        margin-top: 12px;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
+
+      code {
+        padding: 0.1rem 0.35rem;
+        border-radius: 0.4rem;
+        background: rgba(255, 255, 255, 0.55);
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 0.9em;
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+  </head>
+  <body>
+    <main>
+      <h1>World Countries Sample</h1>
+      <p class="intro">
+        외부 CDN에서 <code>world-atlas</code> 국가 경계 TopoJSON을 불러와 나라 경계선을 그리는 예제다.
+        기본은 <code>50m</code> 해상도고, 더 빠른 <code>110m</code> 또는 더 자세한 <code>10m</code>로 바꿔볼 수 있다.
+      </p>
+
+      <div class="controls">
+        <label>
+          해상도
+          <select id="resolution">
+            <option value="110m">110m</option>
+            <option value="50m" selected>50m</option>
+            <option value="10m">10m</option>
+          </select>
+        </label>
+        <label>
+          <input id="hide-antarctica" type="checkbox" checked />
+          남극권 육지 숨김
+        </label>
+        <button id="zoom-in" type="button">zoom in</button>
+        <button id="zoom-out" type="button">zoom out</button>
+        <button id="zoom-reset" type="button">reset view</button>
+      </div>
+
+      <section class="map-shell">
+        <canvas id="map" width="1400" height="700" aria-label="세계 국가 경계 지도"></canvas>
+      </section>
+
+      <div class="meta">
+        <span id="status" title="현재 로딩 상태">status: idle</span>
+        <span id="country-count" title="현재 화면에 그린 국가 폴리곤 수 / 전체 국가 폴리곤 수">countries: -</span>
+        <span id="bbox" title="데이터 전체 경계 박스. 순서: minLon, minLat, maxLon, maxLat">bbox: -</span>
+        <span id="country-hover" title="현재 마우스 아래에 있는 국가 이름">country: -</span>
+        <span id="cursor" title="현재 마우스 위치의 캔버스 좌표와 경도/위도">cursor: -</span>
+        <span id="view-state" title="현재 확대 배율과 이동 오프셋">view: -</span>
+      </div>
+
+      <p class="legend">
+        국가 내부는 옅은 녹색으로 채우고, 국가 간 경계선은 진한 선으로 따로 그린다.
+        <code>10m</code>은 가장 자세하지만 다운로드가 크고 느릴 수 있다.
+      </p>
+    </main>
+
+    <script>
+      const resolutionInput = document.getElementById("resolution");
+      const hideAntarcticaInput = document.getElementById("hide-antarctica");
+      const zoomInButton = document.getElementById("zoom-in");
+      const zoomOutButton = document.getElementById("zoom-out");
+      const zoomResetButton = document.getElementById("zoom-reset");
+      const canvas = document.getElementById("map");
+      const context = canvas.getContext("2d");
+      const statusNode = document.getElementById("status");
+      const countryCountNode = document.getElementById("country-count");
+      const bboxNode = document.getElementById("bbox");
+      const countryHoverNode = document.getElementById("country-hover");
+      const cursorNode = document.getElementById("cursor");
+      const viewStateNode = document.getElementById("view-state");
+      const ANTARCTICA_CUTOFF_LATITUDE = -60;
+      const LONGITUDE_SHIFTS = [-360, 0, 360];
+      const MIN_SCALE = 1;
+      const MAX_SCALE = 12;
+
+      let currentData = null;
+      let renderedFeatures = [];
+      let requestToken = 0;
+      let viewState = { scale: 1, offsetX: 0, offsetY: 0 };
+      let dragState = null;
+
+      function setStatus(message) {
+        statusNode.textContent = `status: ${message}`;
+      }
+
+      function project([longitude, latitude], width, height) {
+        const baseX = ((longitude + 180) / 360) * width;
+        const baseY = ((90 - latitude) / 180) * height;
+        const centeredX = baseX - width / 2;
+        const centeredY = baseY - height / 2;
+
+        return [
+          width / 2 + centeredX * viewState.scale + viewState.offsetX,
+          height / 2 + centeredY * viewState.scale + viewState.offsetY,
+        ];
+      }
+
+      function unproject(x, y, width, height) {
+        const baseX = (x - width / 2 - viewState.offsetX) / viewState.scale + width / 2;
+        const baseY = (y - height / 2 - viewState.offsetY) / viewState.scale + height / 2;
+        return [(baseX / width) * 360 - 180, 90 - (baseY / height) * 180];
+      }
+
+      function formatCoordinate(value, positiveSuffix, negativeSuffix) {
+        const suffix = value >= 0 ? positiveSuffix : negativeSuffix;
+        return `${Math.abs(value).toFixed(2)}°${suffix}`;
+      }
+
+      function resizeCanvas() {
+        const ratio = window.devicePixelRatio || 1;
+        const cssWidth = canvas.clientWidth;
+        const cssHeight = Math.round(cssWidth / 2);
+
+        canvas.width = Math.round(cssWidth * ratio);
+        canvas.height = Math.round(cssHeight * ratio);
+        context.setTransform(ratio, 0, 0, ratio, 0, 0);
+      }
+
+      function clampViewState() {
+        viewState.scale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, viewState.scale));
+      }
+
+      function setViewStateLabel() {
+        viewStateNode.textContent =
+          `view: ${viewState.scale.toFixed(2)}x, dx=${viewState.offsetX.toFixed(0)}, dy=${viewState.offsetY.toFixed(0)}`;
+      }
+
+      function zoomAtPoint(nextScale, anchorX, anchorY) {
+        const width = canvas.clientWidth;
+        const height = Math.round(width / 2);
+        const previousScale = viewState.scale;
+        const clampedScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, nextScale));
+
+        if (clampedScale === previousScale) {
+          return;
+        }
+
+        const baseX = (anchorX - width / 2 - viewState.offsetX) / previousScale;
+        const baseY = (anchorY - height / 2 - viewState.offsetY) / previousScale;
+
+        viewState.scale = clampedScale;
+        viewState.offsetX = anchorX - width / 2 - baseX * clampedScale;
+        viewState.offsetY = anchorY - height / 2 - baseY * clampedScale;
+        clampViewState();
+        renderMap();
+      }
+
+      function resetView() {
+        viewState = { scale: 1, offsetX: 0, offsetY: 0 };
+        renderMap();
+      }
+
+      function drawGrid(width, height) {
+        context.save();
+        context.strokeStyle = "rgba(31, 56, 77, 0.15)";
+        context.lineWidth = 1;
+
+        for (let lon = -180; lon <= 180; lon += 30) {
+          const x = ((lon + 180) / 360) * width;
+          context.beginPath();
+          context.moveTo(x, 0);
+          context.lineTo(x, height);
+          context.stroke();
+        }
+
+        for (let lat = -90; lat <= 90; lat += 30) {
+          const y = ((90 - lat) / 180) * height;
+          context.beginPath();
+          context.moveTo(0, y);
+          context.lineTo(width, y);
+          context.stroke();
+        }
+
+        context.restore();
+      }
+
+      function unwrapLine(coordinates) {
+        if (coordinates.length === 0) {
+          return [];
+        }
+
+        const unwrapped = [coordinates[0].slice()];
+
+        for (let i = 1; i < coordinates.length; i += 1) {
+          const [longitude, latitude] = coordinates[i];
+          const previousLongitude = unwrapped[i - 1][0];
+          let adjustedLongitude = longitude;
+
+          while (adjustedLongitude - previousLongitude > 180) {
+            adjustedLongitude -= 360;
+          }
+
+          while (adjustedLongitude - previousLongitude < -180) {
+            adjustedLongitude += 360;
+          }
+
+          unwrapped.push([adjustedLongitude, latitude]);
+        }
+
+        return unwrapped;
+      }
+
+      function polygonMaxLatitude(polygonCoordinates) {
+        let maxLatitude = -Infinity;
+
+        polygonCoordinates.forEach((ring) => {
+          ring.forEach(([, latitude]) => {
+            if (latitude > maxLatitude) {
+              maxLatitude = latitude;
+            }
+          });
+        });
+
+        return maxLatitude;
+      }
+
+      function filterPolygons(features) {
+        if (!hideAntarcticaInput.checked) {
+          return features;
+        }
+
+        return features.filter((feature) => {
+          if (feature.geometry.type === "Polygon") {
+            return polygonMaxLatitude(feature.geometry.coordinates) >= ANTARCTICA_CUTOFF_LATITUDE;
+          }
+
+          if (feature.geometry.type === "MultiPolygon") {
+            return feature.geometry.coordinates.some(
+              (polygon) => polygonMaxLatitude(polygon) >= ANTARCTICA_CUTOFF_LATITUDE,
+            );
+          }
+
+          return true;
+        });
+      }
+
+      function drawPolygonRings(rings, width, height, longitudeShift) {
+        rings.forEach((ring) => {
+          const unwrapped = unwrapLine(ring);
+
+          unwrapped.forEach((point, pointIndex) => {
+            const [x, y] = project([point[0] + longitudeShift, point[1]], width, height);
+            if (pointIndex === 0) {
+              context.moveTo(x, y);
+            } else {
+              context.lineTo(x, y);
+            }
+          });
+
+          context.closePath();
+        });
+      }
+
+      function drawLineString(coordinates, width, height, longitudeShift) {
+        const unwrapped = unwrapLine(coordinates);
+
+        unwrapped.forEach((point, pointIndex) => {
+          const [x, y] = project([point[0] + longitudeShift, point[1]], width, height);
+          if (pointIndex === 0) {
+            context.moveTo(x, y);
+          } else {
+            context.lineTo(x, y);
+          }
+        });
+      }
+
+      function normalizeLongitudeForPoint(longitude, anchorLongitude) {
+        let normalized = longitude;
+
+        while (normalized - anchorLongitude > 180) {
+          normalized -= 360;
+        }
+
+        while (normalized - anchorLongitude < -180) {
+          normalized += 360;
+        }
+
+        return normalized;
+      }
+
+      function ringContainsPoint(ring, longitude, latitude) {
+        let inside = false;
+        const normalizedRing = ring.map(([ringLongitude, ringLatitude]) => [
+          normalizeLongitudeForPoint(ringLongitude, longitude),
+          ringLatitude,
+        ]);
+
+        for (let i = 0, j = normalizedRing.length - 1; i < normalizedRing.length; j = i, i += 1) {
+          const [xi, yi] = normalizedRing[i];
+          const [xj, yj] = normalizedRing[j];
+          const intersects =
+            yi > latitude !== yj > latitude &&
+            longitude < ((xj - xi) * (latitude - yi)) / (yj - yi) + xi;
+
+          if (intersects) {
+            inside = !inside;
+          }
+        }
+
+        return inside;
+      }
+
+      function polygonContainsPoint(polygon, longitude, latitude) {
+        if (!polygon.length || !ringContainsPoint(polygon[0], longitude, latitude)) {
+          return false;
+        }
+
+        for (let i = 1; i < polygon.length; i += 1) {
+          if (ringContainsPoint(polygon[i], longitude, latitude)) {
+            return false;
+          }
+        }
+
+        return true;
+      }
+
+      function featureContainsPoint(feature, longitude, latitude) {
+        const { geometry } = feature;
+
+        if (geometry.type === "Polygon") {
+          return polygonContainsPoint(geometry.coordinates, longitude, latitude);
+        }
+
+        if (geometry.type === "MultiPolygon") {
+          return geometry.coordinates.some((polygon) =>
+            polygonContainsPoint(polygon, longitude, latitude),
+          );
+        }
+
+        return false;
+      }
+
+      function findCountryAt(longitude, latitude) {
+        return renderedFeatures.find((feature) => featureContainsPoint(feature, longitude, latitude)) || null;
+      }
+
+      function drawCountries(width, height, countryFeatures) {
+        context.save();
+        context.fillStyle = "rgba(61, 102, 86, 0.84)";
+        context.strokeStyle = "rgba(22, 41, 33, 0.95)";
+        context.lineWidth = 0.75;
+
+        countryFeatures.forEach((feature) => {
+          const { geometry } = feature;
+
+          LONGITUDE_SHIFTS.forEach((longitudeShift) => {
+            context.beginPath();
+
+            if (geometry.type === "Polygon") {
+              drawPolygonRings(geometry.coordinates, width, height, longitudeShift);
+            }
+
+            if (geometry.type === "MultiPolygon") {
+              geometry.coordinates.forEach((polygon) => {
+                drawPolygonRings(polygon, width, height, longitudeShift);
+              });
+            }
+
+            context.fill("evenodd");
+          });
+        });
+
+        context.restore();
+      }
+
+      function drawBorders(width, height, borderMesh) {
+        context.save();
+        context.strokeStyle = "#10231a";
+        context.lineWidth = 0.55;
+
+        LONGITUDE_SHIFTS.forEach((longitudeShift) => {
+          context.beginPath();
+
+          if (borderMesh.type === "MultiLineString") {
+            borderMesh.coordinates.forEach((line) => {
+              drawLineString(line, width, height, longitudeShift);
+            });
+          } else if (borderMesh.type === "LineString") {
+            drawLineString(borderMesh.coordinates, width, height, longitudeShift);
+          }
+
+          context.stroke();
+        });
+
+        context.restore();
+      }
+
+      function renderMap() {
+        if (!currentData) {
+          return;
+        }
+
+        resizeCanvas();
+
+        const width = canvas.clientWidth;
+        const height = Math.round(width / 2);
+        const filteredCountries = filterPolygons(currentData.countries.features);
+
+        context.clearRect(0, 0, width, height);
+
+        const background = context.createLinearGradient(0, 0, 0, height);
+        background.addColorStop(0, "#cfe6f3");
+        background.addColorStop(1, "#7baec7");
+        context.fillStyle = background;
+        context.fillRect(0, 0, width, height);
+
+        drawGrid(width, height);
+        drawCountries(width, height, filteredCountries);
+        drawBorders(width, height, currentData.borderMesh);
+        renderedFeatures = filteredCountries;
+
+        countryCountNode.textContent =
+          `countries: ${filteredCountries.length}/${currentData.countries.features.length}`;
+        bboxNode.textContent = `bbox: ${currentData.bbox.join(", ")}`;
+        setViewStateLabel();
+      }
+
+      async function loadWorldAtlas() {
+        const resolution = resolutionInput.value;
+        const token = ++requestToken;
+        const url = `https://cdn.jsdelivr.net/npm/world-atlas@2/countries-${resolution}.json`;
+        viewState = { scale: 1, offsetX: 0, offsetY: 0 };
+
+        setStatus(`loading ${resolution}`);
+
+        try {
+          const response = await fetch(url, { mode: "cors" });
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          const topology = await response.json();
+          if (token !== requestToken) {
+            return;
+          }
+
+          currentData = {
+            bbox: topology.bbox || [-180, -90, 180, 90],
+            countries: topojson.feature(topology, topology.objects.countries),
+            borderMesh: topojson.mesh(
+              topology,
+              topology.objects.countries,
+              (a, b) => a !== b,
+            ),
+          };
+
+          renderMap();
+          setStatus(`ready ${resolution}`);
+        } catch (error) {
+          if (token !== requestToken) {
+            return;
+          }
+
+          currentData = null;
+          context.clearRect(0, 0, canvas.clientWidth, Math.round(canvas.clientWidth / 2));
+          countryCountNode.textContent = "countries: -";
+          bboxNode.textContent = "bbox: -";
+          renderedFeatures = [];
+          setStatus(`load failed (${error.message})`);
+        }
+      }
+
+      function updateCursor(event) {
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        const [longitude, latitude] = unproject(x, y, rect.width, rect.height);
+        const hoveredCountry = findCountryAt(longitude, latitude);
+
+        cursorNode.textContent =
+          `cursor: x=${x.toFixed(1)}, y=${y.toFixed(1)} | ` +
+          `lon=${formatCoordinate(longitude, "E", "W")}, ` +
+          `lat=${formatCoordinate(latitude, "N", "S")}`;
+        countryHoverNode.textContent =
+          `country: ${hoveredCountry ? hoveredCountry.properties?.name || `ISO ${hoveredCountry.id}` : "-"}`;
+      }
+
+      function resetCursor() {
+        cursorNode.textContent = "cursor: -";
+        countryHoverNode.textContent = "country: -";
+      }
+
+      function handleWheel(event) {
+        event.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const anchorX = event.clientX - rect.left;
+        const anchorY = event.clientY - rect.top;
+        const zoomFactor = event.deltaY < 0 ? 1.2 : 1 / 1.2;
+        zoomAtPoint(viewState.scale * zoomFactor, anchorX, anchorY);
+        updateCursor(event);
+      }
+
+      function beginDrag(event) {
+        dragState = {
+          startX: event.clientX,
+          startY: event.clientY,
+          offsetX: viewState.offsetX,
+          offsetY: viewState.offsetY,
+        };
+      }
+
+      function dragMap(event) {
+        if (!dragState) {
+          updateCursor(event);
+          return;
+        }
+
+        viewState.offsetX = dragState.offsetX + (event.clientX - dragState.startX);
+        viewState.offsetY = dragState.offsetY + (event.clientY - dragState.startY);
+        renderMap();
+        updateCursor(event);
+      }
+
+      function endDrag() {
+        dragState = null;
+      }
+
+      loadWorldAtlas();
+      resolutionInput.addEventListener("change", loadWorldAtlas);
+      hideAntarcticaInput.addEventListener("change", renderMap);
+      window.addEventListener("resize", renderMap);
+      zoomInButton.addEventListener("click", () => {
+        zoomAtPoint(viewState.scale * 1.25, canvas.clientWidth / 2, canvas.clientHeight / 2);
+      });
+      zoomOutButton.addEventListener("click", () => {
+        zoomAtPoint(viewState.scale / 1.25, canvas.clientWidth / 2, canvas.clientHeight / 2);
+      });
+      zoomResetButton.addEventListener("click", resetView);
+      canvas.addEventListener("wheel", handleWheel, { passive: false });
+      canvas.addEventListener("mousedown", beginDrag);
+      canvas.addEventListener("mousemove", dragMap);
+      canvas.addEventListener("mouseup", endDrag);
+      canvas.addEventListener("mouseleave", resetCursor);
+      canvas.addEventListener("mouseleave", endDrag);
+      window.addEventListener("mouseup", endDrag);
+    </script>
+  </body>
+</html>

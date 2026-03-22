@@ -1,6 +1,7 @@
 import { Button, NonIdealState, Spinner } from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
 import { useEffect, useRef, useState } from "react";
+import { computeState, getOrbitSamplingConfig, supportsEarthGlobeTrack } from "../lib/orbitMath";
 
 const seoulHomeView = {
   longitude: 126.978,
@@ -31,55 +32,17 @@ function formatAltitude(value) {
   return `${Math.round(value)} km`;
 }
 
-function computeState(satelliteLib, satrec, date) {
-  const propagated = satelliteLib.propagate(satrec, date);
-  if (!propagated?.position) {
-    return null;
+function isPositionInCameraView(Cesium, scene, occluder, position) {
+  if (!position) {
+    return false;
   }
 
-  const gmst = satelliteLib.gstime(date);
-  const geodetic = satelliteLib.eciToGeodetic(propagated.position, gmst);
-
-  return {
-    date,
-    latitude: satelliteLib.degreesLat(geodetic.latitude),
-    longitude: satelliteLib.degreesLong(geodetic.longitude),
-    heightKm: geodetic.height,
-  };
-}
-
-function clamp(value, min, max) {
-  return Math.min(Math.max(value, min), max);
-}
-
-function getOrbitPeriodMinutes(item) {
-  const periodFromOmm = Number(item?.omm?.PERIOD);
-  if (Number.isFinite(periodFromOmm) && periodFromOmm > 0) {
-    return periodFromOmm;
+  if (!occluder.isPointVisible(position)) {
+    return false;
   }
 
-  const meanMotion = Number(item?.omm?.MEAN_MOTION);
-  if (Number.isFinite(meanMotion) && meanMotion > 0) {
-    return 1440 / meanMotion;
-  }
-
-  return item?.orbitClass === "geo" ? 1436 : 96;
-}
-
-function getOrbitSamplingConfig(item) {
-  const periodMinutes = clamp(getOrbitPeriodMinutes(item), 90, 1436);
-  const halfWindowMinutes = periodMinutes / 2;
-  const sampleStepMinutes = clamp(periodMinutes / 90, 2, 20);
-
-  return {
-    periodMinutes,
-    halfWindowMinutes,
-    sampleStepMinutes,
-  };
-}
-
-function supportsEarthGlobeTrack(item) {
-  return item.orbitClass !== "cislunar";
+  const cameraToPoint = Cesium.Cartesian3.subtract(position, scene.camera.positionWC, new Cesium.Cartesian3());
+  return Cesium.Cartesian3.dot(cameraToPoint, scene.camera.directionWC) > 0;
 }
 
 export default function CesiumOrbitDemo({
@@ -94,8 +57,10 @@ export default function CesiumOrbitDemo({
   const cesiumRef = useRef(null);
   const satelliteRef = useRef(null);
   const pointCollectionRef = useRef(null);
+  const pointRecordsRef = useRef([]);
   const koreanFleetRef = useRef([]);
   const clickHandlerRef = useRef(null);
+  const preRenderCallbackRef = useRef(null);
   const pointSelectionCallbackRef = useRef(onPointSelectionChange);
   const satelliteSelectionCallbackRef = useRef(onSatelliteSelectionChange);
   const [status, setStatus] = useState("loading");
@@ -108,6 +73,31 @@ export default function CesiumOrbitDemo({
   useEffect(() => {
     satelliteSelectionCallbackRef.current = onSatelliteSelectionChange;
   }, [onSatelliteSelectionChange]);
+
+  function updateVisibleObjects() {
+    const viewer = viewerRef.current;
+    const Cesium = cesiumRef.current;
+    if (!viewer || !Cesium) {
+      return;
+    }
+
+    const scene = viewer.scene;
+    const occluder = new Cesium.EllipsoidalOccluder(scene.globe.ellipsoid, scene.camera.positionWC);
+    const currentTime = viewer.clock.currentTime;
+
+    for (const item of koreanFleetRef.current) {
+      if (!item.entity?.position) {
+        continue;
+      }
+
+      const position = item.entity.position.getValue(currentTime);
+      item.entity.show = isPositionInCameraView(Cesium, scene, occluder, position);
+    }
+
+    for (const record of pointRecordsRef.current) {
+      record.primitive.show = isPositionInCameraView(Cesium, scene, occluder, record.position);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -194,6 +184,12 @@ export default function CesiumOrbitDemo({
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
         clickHandlerRef.current = clickHandler;
 
+        const handlePreRender = () => {
+          updateVisibleObjects();
+        };
+        viewer.scene.preRender.addEventListener(handlePreRender);
+        preRenderCallbackRef.current = handlePreRender;
+
         viewerRef.current = viewer;
         setStatus("ready");
       } catch (initError) {
@@ -210,7 +206,12 @@ export default function CesiumOrbitDemo({
       cancelled = true;
       clickHandlerRef.current?.destroy();
       clickHandlerRef.current = null;
+      if (viewerRef.current && preRenderCallbackRef.current) {
+        viewerRef.current.scene.preRender.removeEventListener(preRenderCallbackRef.current);
+      }
+      preRenderCallbackRef.current = null;
       koreanFleetRef.current = [];
+      pointRecordsRef.current = [];
       pointCollectionRef.current = null;
 
       const viewer = viewerRef.current;
@@ -347,6 +348,7 @@ export default function CesiumOrbitDemo({
     });
 
     koreanFleetRef.current = nextFleet;
+    updateVisibleObjects();
     return undefined;
   }, [fleet, status]);
 
@@ -362,21 +364,25 @@ export default function CesiumOrbitDemo({
     }
 
     pointCollection.removeAll();
+    pointRecordsRef.current = [];
 
     for (const point of leoPoints) {
-      pointCollection.add({
+      const position = Cesium.Cartesian3.fromDegrees(point.longitude, point.latitude, point.altitudeKm * 1000);
+      const primitive = pointCollection.add({
         id: {
           kind: "leo-point",
           payload: point,
         },
-        position: Cesium.Cartesian3.fromDegrees(point.longitude, point.latitude, point.altitudeKm * 1000),
+        position,
         pixelSize: 3,
         color: Cesium.Color.fromCssColorString("#9bc6ff").withAlpha(0.82),
         outlineColor: Cesium.Color.fromCssColorString("#e8f3ff").withAlpha(0.28),
         outlineWidth: 1,
-        disableDepthTestDistance: Number.POSITIVE_INFINITY,
       });
+      pointRecordsRef.current.push({ primitive, position });
     }
+
+    updateVisibleObjects();
   }, [leoPoints, status]);
 
   useEffect(() => {
@@ -406,8 +412,6 @@ export default function CesiumOrbitDemo({
             sourceLabel: supportsEarthGlobeTrack(item) ? "Ephemeris unavailable" : "Earth-globe track unsupported",
             sourceState: item.sourceState,
             orbitLabel: item.orbitLabel,
-            missionLabel: item.missionLabel,
-            operationalStatus: item.operationalStatus,
             orbitalSlot: item.orbitalSlot,
             norad: item.norad,
           };
@@ -426,8 +430,6 @@ export default function CesiumOrbitDemo({
             sourceLabel: "Ephemeris unavailable",
             sourceState: item.sourceState,
             orbitLabel: item.orbitLabel,
-            missionLabel: item.missionLabel,
-            operationalStatus: item.operationalStatus,
             orbitalSlot: item.orbitalSlot,
             norad: item.norad,
           };
@@ -444,8 +446,6 @@ export default function CesiumOrbitDemo({
           sourceLabel: item.sourceLabel,
           sourceState: item.sourceState,
           orbitLabel: item.orbitLabel,
-          missionLabel: item.missionLabel,
-          operationalStatus: item.operationalStatus,
           orbitalSlot: item.orbitalSlot,
           norad: item.norad,
         };

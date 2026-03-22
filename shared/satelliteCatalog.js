@@ -31,9 +31,6 @@ const manualOverrides = {
     color: "#ffd166",
     orbitClass: "leo",
     orbitLabel: "LEO SSO",
-    missionType: "earth-observation",
-    missionLabel: "상업 지구관측",
-    operationalStatus: "운용 중",
   },
   "38338": {
     id: "kompsat-3",
@@ -41,9 +38,6 @@ const manualOverrides = {
     color: "#7bdff2",
     orbitClass: "leo",
     orbitLabel: "LEO SSO",
-    missionType: "earth-observation",
-    missionLabel: "상업 지구관측",
-    operationalStatus: "운용 중",
   },
   "39227": {
     id: "kompsat-5",
@@ -51,9 +45,6 @@ const manualOverrides = {
     color: "#9bdeac",
     orbitClass: "leo",
     orbitLabel: "LEO SSO",
-    missionType: "earth-observation",
-    missionLabel: "상업 지구관측",
-    operationalStatus: "운용 중",
   },
   "40536": {
     id: "kompsat-3a",
@@ -61,9 +52,6 @@ const manualOverrides = {
     color: "#f78fb3",
     orbitClass: "leo",
     orbitLabel: "LEO SSO",
-    missionType: "earth-observation",
-    missionLabel: "상업 지구관측",
-    operationalStatus: "운용 중",
   },
   "42984": {
     id: "koreasat-5a",
@@ -71,9 +59,6 @@ const manualOverrides = {
     color: "#8bd0ff",
     orbitClass: "geo",
     orbitLabel: "GEO",
-    missionType: "communications",
-    missionLabel: "상업 통신",
-    operationalStatus: "운용 중",
     orbitalSlot: "113°E",
   },
   "61910": {
@@ -82,9 +67,6 @@ const manualOverrides = {
     color: "#65d4a8",
     orbitClass: "geo",
     orbitLabel: "GEO",
-    missionType: "communications",
-    missionLabel: "상업 통신",
-    operationalStatus: "운용 중",
     orbitalSlot: "116°E",
   },
   "63229": {
@@ -94,22 +76,8 @@ const manualOverrides = {
     color: "#ff9059",
     orbitClass: "leo",
     orbitLabel: "LEO SSO",
-    missionType: "earth-observation",
-    missionLabel: "상업 광학 지구관측",
-    operationalStatus: "운용 중",
   },
 };
-
-const activeOperationalNorads = new Set([
-  "29268", // KOMPSAT-2
-  "38338", // KOMPSAT-3
-  "39227", // KOMPSAT-5
-  "40536", // KOMPSAT-3A
-  "42691", // KOREASAT 7
-  "42984", // KOREASAT 5A
-  "61910", // KOREASAT 6A
-  "63229", // SpaceEye-T
-]);
 
 const decayedNorads = new Set(
   Object.values(liveFleetCache.entries ?? {})
@@ -163,28 +131,6 @@ function inferOrbit(row) {
   return { orbitClass: "leo", orbitLabel: "LEO" };
 }
 
-function inferMission(row) {
-  const name = `${row.OBJECT_NAME ?? ""} ${row.SATNAME ?? ""}`.toUpperCase();
-
-  if (/KOREASAT|MUGUNGHWA/.test(name)) {
-    return { missionType: "communications", missionLabel: "상업 통신" };
-  }
-
-  if (/GEO-KOMPSAT|COMS/.test(name)) {
-    return { missionType: "earth-observation", missionLabel: "기상·해양 관측" };
-  }
-
-  if (/SPACEEYE|KOMPSAT|CAS500|NEONSAT|OBSERVER|KORSAT|GYEONGGISAT/.test(name)) {
-    return { missionType: "earth-observation", missionLabel: "지구관측" };
-  }
-
-  if (/KPLO/.test(name)) {
-    return { missionType: "science", missionLabel: "심우주 탐사" };
-  }
-
-  return { missionType: "technology", missionLabel: "기술실증/학술" };
-}
-
 function inferColor(norad, orbitClass) {
   const palette = orbitColors[orbitClass] ?? orbitColors.leo;
   return palette[hashValue(norad) % palette.length];
@@ -193,7 +139,6 @@ function inferColor(norad, orbitClass) {
 function buildCatalogEntry(row) {
   const override = manualOverrides[row.NORAD_CAT_ID] ?? {};
   const orbit = inferOrbit(row);
-  const mission = inferMission(row);
   const englishName = row.OBJECT_NAME ?? row.SATNAME ?? `NORAD ${row.NORAD_CAT_ID}`;
   const name = override.name ?? englishName;
 
@@ -206,9 +151,6 @@ function buildCatalogEntry(row) {
     norad: row.NORAD_CAT_ID,
     orbitClass: override.orbitClass ?? orbit.orbitClass,
     orbitLabel: override.orbitLabel ?? orbit.orbitLabel,
-    missionType: override.missionType ?? mission.missionType,
-    missionLabel: override.missionLabel ?? mission.missionLabel,
-    operationalStatus: override.operationalStatus ?? (activeOperationalNorads.has(row.NORAD_CAT_ID) ? "운용 중" : "비현역"),
     orbitalSlot: override.orbitalSlot,
     objectId: row.OBJECT_ID,
     launchDate: row.LAUNCH || null,
